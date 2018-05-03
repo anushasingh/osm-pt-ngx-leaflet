@@ -5,8 +5,16 @@ export interface IRootAppState {
   // app: IAppState;
   routes?: any;
 }
-
 export interface IAppState {
   editing: boolean;
-  selectObject: number;
+  selectObject:  {
+  type: string;
+  id: number;
+  timestamp: string;
+  version: number;
+  changeset: number;
+  user: string;
+  uid: number;
+  tags: {
+    }; };
 }

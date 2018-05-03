@@ -71,19 +71,21 @@
       </div>
     </div>
   </div>
+
   <div *ngIf="currentElement" class="content panel panel-body panel-default">
     <table class="table-responsive table-condensed table-bordered table-hover table-striped wide-table">
       <tbody>
-      <tr *ngFor="let tag of currentElement['tags'] | keys;">
+      <tr *ngFor="let tag of currentElement.tags | keys;">
         <td>
-          <ng-container *ngIf="!editing$ | async">{{tag.key}}</ng-container>
-          <input type="text" *ngIf="editing$ | async" value="{{tag.key}}" data-type="key"
-                 (blur)="createChange('change tag', tag.key, $event)">
+
+          <ng-container *ngIf="!(editing$ | async)"><p>{{tag.key  }}</p></ng-container>
+          <input type="text" *ngIf="editing$ | async" value="{{tag.key }}" data-type="key"
+                 (blur)="createChange('change tag', tag.key, tag.value, $event)">
         </td>
         <td>
-          <ng-container *ngIf="!editing$ | async">{{tag.value}}</ng-container>
+          <ng-container *ngIf="!(editing$ | async)">{{tag.value}}</ng-container>
           <input type="text" *ngIf="editing$ | async" value="{{tag.value}}" data-type="value"
-                 (blur)="createChange('change tag', tag.key, $event)" >
+                 (blur)="createChange('change tag', tag.key, tag.value, $event)" >
         </td>
         <td *ngIf="editing$ | async">
           <button class="btn btn-sm btn-danger fa fa-minus"

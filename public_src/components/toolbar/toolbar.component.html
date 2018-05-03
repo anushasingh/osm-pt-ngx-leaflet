@@ -46,8 +46,9 @@
   stops: {{stats.s}}, relations: {{stats.r}}, areas: {{stats.a}} masters: {{stats.m}}
 </div>
 
-<div id="selection" class="text-center" *ngIf="currentElement">
-  <p class="medium">{{currentElement.tags.name || currentElement.tags.public_transport || ""}} (id: {{currentElement.id || ""}}, type: {{currentElement.type || ""}})</p>
+<div id="selection" class="text-center" *ngIf="currentElement |async; let element ">
+
+  <p class="medium">{{ (element.tags.name  )|| (element.tags.public_transport )|| ""}} (id: {{(element.id) || ""}}, type: {{(element.type) || ""}})</p>
   <button type="button" class="btn btn-default col-md-6" container="body"
           tooltip="{{ 'Cancel selection' | translate }}"
           (click)="cancelSelection()">
@@ -62,7 +63,7 @@
     </button>
     <ul *dropdownMenu id="dropdownitems" class="dropdown-menu" role="menu">
       <li role="menuitem">
-        <a class="dropdown-item" href="#" tooltip="{{ 'Open in ID' | translate }}" (click)="openInIdEditor(currentElement)">
+        <a class="dropdown-item" href="#" tooltip="{{ 'Open in ID' | translate }}" (click)="openInIdEditor(element )">
           &nbsp;{{ 'Open in ID' | translate }}
         </a>
       </li>
@@ -76,18 +77,17 @@
 
   <button type="button" class="btn btn-default col-md-6" container="body"
           tooltip="{{ 'Zoom to selected element' | translate }}"
-          (click)="zoomTo(currentElement)"
+          (click)="zoomTo(element )"
           [disabled]="isDisabled()">
     <i class="fa fa-search" aria-hidden="true"></i>
     &nbsp;{{ 'Show' | translate }}
   </button>
   <button type="button" class="btn btn-default col-md-6" container="body"
           tooltip="{{ 'Show more information' | translate }}"
-          (click)="showInfo(currentElement)">
+          (click)="showInfo(element )">
     <i class="fa fa-question-circle" aria-hidden="true"></i>
     &nbsp;{{ 'Info' | translate }}
   </button>
-
 
 
 </div>

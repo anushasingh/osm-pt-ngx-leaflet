@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 
 import { EditorComponent } from '../editor/editor.component';
 import { TransporterComponent } from '../transporter/transporter.component';
@@ -10,6 +10,7 @@ import { ProcessService } from '../../services/process.service';
 import { StorageService } from '../../services/storage.service';
 
 import { IOsmEntity } from '../../core/osmEntity.interface';
+import { select } from '@angular-redux/store';
 
 @Component({
   providers: [],
@@ -20,17 +21,16 @@ import { IOsmEntity } from '../../core/osmEntity.interface';
   ],
   templateUrl: './toolbar.component.html',
 })
-export class ToolbarComponent {
+export class ToolbarComponent implements OnInit, OnDestroy {
   public downloading: boolean;
   public htRadioModel: string;
   @ViewChild(TransporterComponent)
   public transporterComponent: TransporterComponent;
   @ViewChild(EditorComponent) public editorComponent: EditorComponent;
   public filtering: boolean;
-
-  public currentElement: IOsmEntity;
   public stats = { s: 0, r: 0, a: 0, m: 0 };
-
+  @select (['app', 'selectObject']) currentElement;
+  private subscription;
   constructor(
     private confSrv: ConfService,
     private mapSrv: MapService,
@@ -40,21 +40,20 @@ export class ToolbarComponent {
   ) {
     this.downloading = true;
     this.filtering = this.confSrv.cfgFilterLines;
-    this.processSrv.refreshSidebarViews$.subscribe((data) => {
-      if (data === 'tag') {
-        console.log(
-          'LOG (toolbar) Current selected element changed - ',
-          data, this.currentElement, this.storageSrv.currentElement,
-        );
-        this.currentElement = this.storageSrv.currentElement;
-      }
-    });
+    // this.processSrv.refreshSidebarViews$.subscribe((data) => {
+    //   if (data === 'tag') {
+    //     console.log(
+    //       'LOG (toolbar) Current selected element changed - ',
+    //       data, this.currentElement, this.storageSrv.currentElement,
+    //     );
+    //     // this.currentElement = this.storageSrv.currentElement;
+    //   }
+    // });
     this.storageSrv.stats.subscribe((data) => (this.stats = data));
-    this.mapSrv.highlightTypeEmitter.subscribe((data) => {
+    this.subscription = this.mapSrv.highlightTypeEmitter.subscribe((data) => {
       this.htRadioModel = data.highlightType;
     });
   }
-
   ngOnInit(): void {
     this.mapSrv.disableMouseEvent('toggle-download');
     this.mapSrv.disableMouseEvent('toggle-filter');
@@ -142,7 +141,7 @@ export class ToolbarComponent {
    * @param selection
    */
   private showInfo(selection: object): void {
-    alert(JSON.stringify(selection, null, '\t'));
+    // alert(JSON.stringify(selection, null, '\t'));
   }
 
   private cancelSelection(): void {
@@ -185,5 +184,9 @@ export class ToolbarComponent {
 
   private isDisabled(): boolean {
     return this.currentElement.id < 0;
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }

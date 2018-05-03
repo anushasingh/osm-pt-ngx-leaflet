@@ -10,9 +10,9 @@ import { StorageService } from './storage.service';
 import { IOsmEntity } from '../core/osmEntity.interface';
 import { IPtRelation } from '../core/ptRelation.interface';
 import { IPtStop } from '../core/ptStop.interface';
-import { NgRedux } from '@angular-redux/store';
 import { IAppState } from '../store/model';
 import { AppActions } from '../store/app/actions';
+import { NgRedux, select } from '@angular-redux/store';
 
 @Injectable()
 export class ProcessService {
@@ -26,7 +26,7 @@ export class ProcessService {
   public refreshSidebarViews$ = this.refreshSidebarViewsSource.asObservable();
   public membersToDownload: EventEmitter<object> = new EventEmitter();
   public refreshMasters: EventEmitter<object> = new EventEmitter();
-
+  @select (['app', 'selectObject']) currentElement;
   constructor(
     private ngRedux: NgRedux<IAppState>,
     private appActions: AppActions,
@@ -64,7 +64,7 @@ export class ProcessService {
         }
         this.appActions.actSelectElement({ element });
         console.log('LOG (processing s.) Selected element is ', element);
-        this.refreshTagView(element);
+        // this.refreshTagView(this.currentElement);
       },
     );
   }
@@ -293,7 +293,7 @@ export class ProcessService {
   public refreshTagView(element: any): void {
     if (element) {
       this.storageSrv.currentElementsChange.emit(
-        JSON.parse(JSON.stringify(element)),
+        // JSON.parse(JSON.stringify(element)),
       );
       this.refreshSidebarView('tag');
     } else {
@@ -313,7 +313,7 @@ export class ProcessService {
         this.storageSrv.listOfVariants.push(routeVariant);
       }
     }
-    this.refreshSidebarView('relation');
+    // this.refreshSidebarView('relation');
   }
 
   /**
@@ -359,7 +359,7 @@ export class ProcessService {
     ) {
       console.log(
         'LOG (processing s.) Relation is not completely downloaded. Missing: ' +
-          missingElements.join(', '),
+        missingElements.join(', '),
       );
       this.membersToDownload.emit({
         rel,
@@ -373,7 +373,7 @@ export class ProcessService {
       console.log('podminka plati', rel.id, rel['members'].length);
       this.downloadedMissingMembers(rel, true, zoomToElement);
     } else if (rel.id < 0) {
-      this.refreshTagView(rel);
+      // this.refreshTagView(rel);
     } else {
       return alert(
         'FIXME: Some other problem with relation - downloaded ' +
@@ -390,7 +390,7 @@ export class ProcessService {
       this.refreshRelationView(rel);
     }
     if (refreshTagView) {
-      this.refreshTagView(rel);
+      // this.refreshTagView(rel);
     }
   }
 
@@ -423,7 +423,7 @@ export class ProcessService {
       }
     }
     if (refreshTagView) {
-      this.refreshTagView(rel);
+      // this.refreshTagView(rel);
     }
   }
 
@@ -459,7 +459,7 @@ export class ProcessService {
       false,
     );
     // this.mapSrv.showRelatedRoutes(routeVariants);
-    this.refreshTagView(rel);
+    // this.refreshTagView(rel);
     this.refreshRelationView(rel);
   }
 
@@ -486,7 +486,7 @@ export class ProcessService {
     }
     this.mapSrv.addExistingHighlight();
     if (refreshTags) {
-      this.refreshTagView(stop);
+      // this.refreshTagView(stop);
     }
     if (zoomTo) {
       this.mapSrv.map.panTo([stop.lat, stop.lon]);
@@ -508,7 +508,7 @@ export class ProcessService {
       }
     }
     this.activateFilteredRouteView(true);
-    this.refreshSidebarView('route');
+    // this.refreshSidebarView('route');
     return this.storageSrv.listOfRelationsForStop;
   }
 
@@ -534,7 +534,7 @@ export class ProcessService {
       }
     });
     this.activateFilteredStopView(true);
-    this.refreshSidebarView('stop');
+    // this.refreshSidebarView('stop');
   }
 
   /**
@@ -599,7 +599,7 @@ export class ProcessService {
   }
 
   public cancelSelection(): void {
-    this.refreshTagView(undefined);
+    // this.refreshTagView(undefined);
     this.mapSrv.clearHighlight();
   }
 
