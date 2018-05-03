@@ -34,3 +34,6 @@ public/**/*
 
 # Cypress tests
 cypress/videos
+
+#Webstorm generated idea files
+.idea/*
