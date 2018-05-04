@@ -9,7 +9,7 @@ import { OverpassService } from '../../services/overpass.service';
 import { ProcessService } from '../../services/process.service';
 import { StorageService } from '../../services/storage.service';
 
-import { IOsmEntity } from '../../core/osmEntity.interface';
+import { IOsmElement } from '../../core/osmElement.interface';
 import { select } from '@angular-redux/store';
 
 @Component({
@@ -150,7 +150,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.processSrv.cancelSelection();
   }
 
-  private zoomTo(selection: IOsmEntity): void {
+  private zoomTo(selection: IOsmElement): void {
     this.processSrv.zoomToElement(selection);
   }
 

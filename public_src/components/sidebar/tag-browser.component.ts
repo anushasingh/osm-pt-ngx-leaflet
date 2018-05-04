@@ -2,19 +2,22 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  Input, OnDestroy, OnInit,
+  Input,
+  OnDestroy,
+  OnInit,
 } from '@angular/core';
+import { NgRedux, select } from '@angular-redux/store';
+
+import { Observable } from 'rxjs/Observable';
 
 import { EditService } from '../../services/edit.service';
 import { ProcessService } from '../../services/process.service';
 import { StorageService } from '../../services/storage.service';
 
-import { IOsmEntity } from '../../core/osmEntity.interface';
+import { IOsmElement } from '../../core/osmElement.interface';
 
-import {NgRedux, select} from '@angular-redux/store';
-import { Observable } from 'rxjs/Observable';
 import { AppActions } from '../../store/app/actions';
-import {IAppState} from '../../store/model';
+import { IAppState } from '../../store/model';
 
 
 @Component({
@@ -30,7 +33,7 @@ import {IAppState} from '../../store/model';
 export class TagBrowserComponent implements OnInit, OnDestroy {
   @Input() public tagKey: string = '';
   @Input() public tagValue: string = '';
-  public currentElement: IOsmEntity;
+  public currentElement: IOsmElement;
   @select(['app', 'editing']) public readonly editing$: Observable<boolean>;
   public subscription;
   public expectedKeys = [

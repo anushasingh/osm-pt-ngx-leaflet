@@ -7,7 +7,7 @@ import { LoadService } from './load.service';
 import { MapService } from './map.service';
 import { StorageService } from './storage.service';
 
-import { IOsmEntity } from '../core/osmEntity.interface';
+import { IOsmEntity } from '../core/osmElement.interface';
 import { IPtRelation } from '../core/ptRelation.interface';
 import { IPtStop } from '../core/ptStop.interface';
 import { IAppState } from '../store/model';

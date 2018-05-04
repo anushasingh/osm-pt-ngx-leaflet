@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
+import { dispatch, NgRedux } from '@angular-redux/store';
 import { Action } from 'redux';
 import { IAppState } from '../model';
-import { dispatch, NgRedux } from '@angular-redux/store';
 
 @Injectable()
 export class AppActions {
@@ -27,7 +27,7 @@ export class AppActions {
 
   // basic sync action
   public actSelectElement = (args): Action => {
-    const {element} = args;
+    const { element } = args;
     return this.ngRedux.dispatch({
       type: AppActions.SELECT_ELEMENT,
       payload: element,

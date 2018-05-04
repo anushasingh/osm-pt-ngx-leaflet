@@ -5,7 +5,8 @@ import { AppActions } from './actions';
 export const INITIAL_STATE: IAppState = {
   editing: false,
   selectObject: null,
-}
+};
+
 export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction): any {
   switch (action.type) {
     case AppActions.TOGGLE_EDITING:
