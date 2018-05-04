@@ -7,7 +7,7 @@ import { LoadService } from './load.service';
 import { MapService } from './map.service';
 import { StorageService } from './storage.service';
 
-import { IOsmEntity } from '../core/osmElement.interface';
+import { IOsmElement } from '../core/osmElement.interface';
 import { IPtRelation } from '../core/ptRelation.interface';
 import { IPtStop } from '../core/ptStop.interface';
 import { IAppState } from '../store/model';
@@ -70,7 +70,7 @@ export class ProcessService {
   }
 
   /**
-   * Returns elemenet with specific ID directly from mapped object.
+   * Returns element with specific ID directly from mapped object.
    * @param featureId
    */
   public getElementById(featureId: number): any {
@@ -152,6 +152,7 @@ export class ProcessService {
               this.storageSrv.listOfAreas.push(element);
             } else {
               this.storageSrv.listOfRelations.push(element);
+              this.appActions.actGetNodeRelations({ relation : element });
               break;
             }
         }
@@ -541,7 +542,7 @@ export class ProcessService {
    * Zooms to the input element (point position or relation geometry).
    * @param element
    */
-  public zoomToElement(element: IOsmEntity): void {
+  public zoomToElement(element: IOsmElement): void {
     if (element.type === 'node') {
       if (!element['lat'] || !element['lon']) {
         return alert(

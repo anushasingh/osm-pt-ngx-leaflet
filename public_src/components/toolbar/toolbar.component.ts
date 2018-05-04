@@ -11,6 +11,7 @@ import { StorageService } from '../../services/storage.service';
 
 import { IOsmElement } from '../../core/osmElement.interface';
 import { select } from '@angular-redux/store';
+import { AppActions } from '../../store/app/actions';
 
 @Component({
   providers: [],
@@ -30,6 +31,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   public filtering: boolean;
   public stats = { s: 0, r: 0, a: 0, m: 0 };
   @select (['app', 'selectObject']) currentElement;
+ @select (['app', 'cancelSelectElement']) cancelSelectElement;
   private subscription;
   constructor(
     private confSrv: ConfService,
@@ -37,6 +39,7 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     private overpassSrv: OverpassService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    private appActions: AppActions
   ) {
     this.downloading = true;
     this.filtering = this.confSrv.cfgFilterLines;
@@ -145,9 +148,10 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   }
 
   private cancelSelection(): void {
-    delete this.currentElement;
-    this.currentElement = undefined;
-    this.processSrv.cancelSelection();
+    // delete this.currentElement;
+    // this.currentElement = undefined;
+    // this.processSrv.cancelSelection();
+    this.appActions.actCancelSelectElement();
   }
 
   private zoomTo(selection: IOsmElement): void {

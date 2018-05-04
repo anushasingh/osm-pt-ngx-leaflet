@@ -17,7 +17,8 @@ export class AppActions {
   static readonly EDIT_TAGVALUE = 'EDIT_TAGVALUE';
   static readonly ADD_TAG = 'ADD_TAG';
   static readonly REMOVE_TAG = 'REMOVE_TAG';
-
+  static readonly GET_NODE_RELATIONS = 'GET_NODE_RELATIONS ';
+  static readonly CANCEL_SELECT_ELEMENT = 'CANCEL_SELECT_ELEMENT';
   // basic sync action
   public actToggleEditing = (): Action => {
     return this.ngRedux.dispatch({
@@ -72,6 +73,21 @@ export class AppActions {
         key,
       },
     });
+  }
+  public actGetNodeRelations = (args): Action => {
+      const {relation} = args;
+      return this.ngRedux.dispatch({
+        type: AppActions.GET_NODE_RELATIONS,
+        payload: {
+          relation,
+        },
+      });
 
+  }
+
+  public actCancelSelectElement = (): Action => {
+    return this.ngRedux.dispatch({
+      type: AppActions.CANCEL_SELECT_ELEMENT,
+    });
   }
 }

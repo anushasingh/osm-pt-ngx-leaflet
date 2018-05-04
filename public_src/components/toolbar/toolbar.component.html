@@ -46,7 +46,7 @@
   stops: {{stats.s}}, relations: {{stats.r}}, areas: {{stats.a}} masters: {{stats.m}}
 </div>
 
-<div id="selection" class="text-center" *ngIf="currentElement |async; let element ">
+<div id="selection" class="text-center" *ngIf=" (!( cancelSelectElement | async)) && currentElement |async; let element ">
 
   <p class="medium">{{ (element.tags.name  )|| (element.tags.public_transport )|| ""}} (id: {{(element.id) || ""}}, type: {{(element.type) || ""}})</p>
   <button type="button" class="btn btn-default col-md-6" container="body"

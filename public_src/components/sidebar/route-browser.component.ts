@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 
 import { EditService } from '../../services/edit.service';
 import { MapService } from '../../services/map.service';
@@ -6,8 +6,8 @@ import { OverpassService } from '../../services/overpass.service';
 import { ProcessService } from '../../services/process.service';
 import { StorageService } from '../../services/storage.service';
 import { Observable } from 'rxjs/Observable';
-import { select } from '@angular-redux/store';
-
+import { NgRedux, select } from '@angular-redux/store';
+import { IAppState } from '../../store/model';
 @Component({
   providers: [],
   selector: 'route-browser',
@@ -17,27 +17,33 @@ import { select } from '@angular-redux/store';
   ],
   templateUrl: './route-browser.component.html',
 })
-export class RouteBrowserComponent {
+export class RouteBrowserComponent implements OnInit, OnDestroy {
   @select(['app', 'editing']) public readonly editing$: Observable<boolean>;
+
+  @select(['app', 'cancelSelectElement']) public readonly cancel: Observable<boolean>;
 
   public currentElement;
   public listOfMasters: object[] = this.storageSrv.listOfMasters;
   public listOfRelations: object[] = this.storageSrv.listOfRelations;
   public listOfRelationsForStop: object[] = this.storageSrv.listOfRelationsForStop;
-
+  public mylistOfRelations ;
   public isRequesting: boolean;
   public filteredView: boolean;
   private idsHaveMaster = new Set();
   public membersEditing: boolean = false;
-
+  public subscription;
+  public mycurrentElement;
   constructor(
     private editSrv: EditService,
     private mapSrv: MapService,
     private overpassSrv: OverpassService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    ngRedux: NgRedux<IAppState>,
   ) {
-    //
+    this.subscription = ngRedux.subscribe(() => {
+      this.mylistOfRelations = ngRedux.getState()['app']['selectedObjectRoutes'];
+    });
   }
 
   ngOnInit(): void {
@@ -189,5 +195,9 @@ export class RouteBrowserComponent {
    */
   private trackByFn(index: number, item: any): number {
     return item.id;
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }

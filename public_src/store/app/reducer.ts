@@ -5,6 +5,8 @@ import { AppActions } from './actions';
 export const INITIAL_STATE: IAppState = {
   editing: false,
   selectObject: null,
+  selectedObjectRoutes: [],
+  cancelSelectElement: false,
 };
 
 export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction): any {
@@ -18,6 +20,7 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
       return {
         ...state,
         selectObject: action.payload,
+        selectedObjectRoutes : [],
       };
 
     case AppActions.EDIT_TAGVALUE:
@@ -62,7 +65,7 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
       },
     };
     case AppActions.REMOVE_TAG:
-    let removeByKey= (myObj, deleteKey) => {
+    let removeByKey = (myObj, deleteKey) => {
       return Object.keys(myObj)
         .filter((key) => key !== deleteKey)
         .reduce((result, current) => {
@@ -78,7 +81,17 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
             ...state.selectObject,
             tags: afterRemoveTags,
           },
-  }
+  };
+    case AppActions.GET_NODE_RELATIONS:
+      return {
+        ...state,
+        selectedObjectRoutes : [...state.selectedObjectRoutes, action.payload.relation],
+   };
+    case AppActions.CANCEL_SELECT_ELEMENT:
+      return {
+        ...state,
+        cancelSelectElement : true,
+      };
        default:
   // We don't care about any other actions right now.
   return state;
