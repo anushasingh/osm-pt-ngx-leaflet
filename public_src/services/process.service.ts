@@ -10,6 +10,8 @@ import { StorageService } from './storage.service';
 import { IOsmElement } from '../core/osmElement.interface';
 import { IPtRelation } from '../core/ptRelation.interface';
 import { IPtStop } from '../core/ptStop.interface';
+import { IOverpassResponse } from '../core/overpassResponse.interface';
+
 import { IAppState } from '../store/model';
 import { AppActions } from '../store/app/actions';
 import { NgRedux, select } from '@angular-redux/store';
@@ -70,7 +72,7 @@ export class ProcessService {
   }
 
   /**
-   * Returns element with specific ID directly from mapped object.
+   * Returns elemenet with specific ID directly from mapped object.
    * @param featureId
    */
   public getElementById(featureId: number): any {
@@ -82,23 +84,25 @@ export class ProcessService {
   /**
    * Filters data in the sidebar depending on current view's bounding box.
    */
-  public filterDataInBounds(): void {
-    if (
-      !this.storageSrv.localJsonStorage ||
-      this.storageSrv.listOfStops.length > 1000
-    ) {
-      return console.log(
-        'LOG (processing s.) filtering of stops in map bounds was stopped (too much data - limit 1000 nodes).',
-      );
-    }
-    this.mapSrv.bounds = this.mapSrv.map.getBounds();
-    for (const stop of this.storageSrv.listOfStops) {
-      const el = document.getElementById(stop.id.toString());
-      if (!el) {
-        return;
+  public filterDataInBounds(listofStops: object[]): void {
+    if (listofStops) {
+      if (
+        !this.storageSrv.localJsonStorage ||
+        listofStops.length > 1000
+      ) {
+        return console.log(
+          'LOG (processing s.) filtering of stops in map bounds was stopped (too much data - limit 1000 nodes).',
+        );
       }
-      el.style.display = el && this.mapSrv.bounds.contains([stop.lat, stop.lon]) ? 'table-row' : 'none';
-      // el.style.display = el && this.mapSrv.bounds.contains([stop.lat, stop.lon]) ? "table-row" : "none";
+      this.mapSrv.bounds = this.mapSrv.map.getBounds();
+      for (const stop of listofStops) {
+        const el = document.getElementById(stop['id'].toString());
+        if (!el) {
+          return;
+        }
+        el.style.display = el && this.mapSrv.bounds.contains([stop['lat'], stop['lon']]) ? 'table-row' : 'none';
+        // el.style.display = el && this.mapSrv.bounds.contains([stop.lat, stop.lon]) ? "table-row" : "none";
+      }
     }
   }
 
@@ -117,7 +121,7 @@ export class ProcessService {
    *
    * @param response
    */
-  public processResponse(response: object): void {
+  public processResponse(response: IOverpassResponse): void {
     const responseId = this.getResponseId();
     const transformedGeojson = this.mapSrv.osmtogeojson(response);
     this.storageSrv.localJsonStorage.set(responseId, response);
@@ -144,15 +148,14 @@ export class ProcessService {
             this.storageSrv.elementsDownloaded.add(element.id);
 
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
-              this.storageSrv.listOfStops.push(element);
+              this.appActions.actAddToListOfStops({ newStop: element });
             }
             break;
           case 'relation':
             if (element.tags.public_transport === 'stop_area') {
               this.storageSrv.listOfAreas.push(element);
             } else {
-              this.storageSrv.listOfRelations.push(element);
-              this.appActions.actGetNodeRelations({ relation : element });
+              this.appActions.actAddToListOfRelations({ newRelation : element });
               break;
             }
         }
@@ -222,14 +225,14 @@ export class ProcessService {
               ['platform', 'stop_position', 'station']
                 .indexOf(element.tags.public_transport) > -1
             ) {
-              this.storageSrv.listOfStops.push(element);
+              this.appActions.actAddToListOfStops({ newStop: element });
             }
             break;
           case 'relation':
             if (element.tags.public_transport === 'stop_area') {
               this.storageSrv.listOfAreas.push(element);
             } else if (element.tags.public_transport) {
-              this.storageSrv.listOfRelations.push(element);
+              this.appActions.actAddToListOfRelations({ newRelation: element });
               break;
             }
         }
@@ -360,7 +363,7 @@ export class ProcessService {
     ) {
       console.log(
         'LOG (processing s.) Relation is not completely downloaded. Missing: ' +
-        missingElements.join(', '),
+          missingElements.join(', '),
       );
       this.membersToDownload.emit({
         rel,
@@ -390,9 +393,9 @@ export class ProcessService {
       // delete rel.members; // FIXME ??? - TOO MANY RELATIONS?
       this.refreshRelationView(rel);
     }
-    if (refreshTagView) {
-      // this.refreshTagView(rel);
-    }
+    // if (refreshTagView) {
+    //    this.refreshTagView(rel);
+    // }
   }
 
   /**
@@ -424,7 +427,7 @@ export class ProcessService {
       }
     }
     if (refreshTagView) {
-      // this.refreshTagView(rel);
+       this.refreshTagView(rel);
     }
   }
 
@@ -460,7 +463,7 @@ export class ProcessService {
       false,
     );
     // this.mapSrv.showRelatedRoutes(routeVariants);
-    // this.refreshTagView(rel);
+    this.refreshTagView(rel);
     this.refreshRelationView(rel);
   }
 
@@ -476,18 +479,19 @@ export class ProcessService {
     filterRelations: boolean,
     refreshTags: boolean,
     zoomTo: boolean,
+    listofRelations: object[],
   ): void {
     if (this.mapSrv.highlightIsActive()) {
       this.mapSrv.clearHighlight();
     }
     this.mapSrv.showStop(stop);
     if (filterRelations) {
-      const filteredRelationsForStop = this.filterRelationsByStop(stop);
+      const filteredRelationsForStop = this.filterRelationsByStop(stop, listofRelations);
       this.mapSrv.showRelatedRoutes(filteredRelationsForStop);
     }
     this.mapSrv.addExistingHighlight();
     if (refreshTags) {
-      // this.refreshTagView(stop);
+      this.refreshTagView(stop);
     }
     if (zoomTo) {
       this.mapSrv.map.panTo([stop.lat, stop.lon]);
@@ -498,10 +502,10 @@ export class ProcessService {
    * Filters relations (routes) for given stop.
    * @param stop
    */
-  public filterRelationsByStop(stop: IPtStop): object[] {
+  public filterRelationsByStop(stop: IPtStop, listofRelations: object[]): object[] {
     this.storageSrv.listOfRelationsForStop = [];
 
-    for (const relation of this.storageSrv.listOfRelations) {
+    for (const relation of listofRelations) {
       for (const member of relation['members']) {
         if (member['ref'] === stop.id) {
           this.storageSrv.listOfRelationsForStop.push(relation);
@@ -529,9 +533,7 @@ export class ProcessService {
           JSON.parse(JSON.stringify(mem)),
           JSON.parse(JSON.stringify(stop)),
         );
-        this.storageSrv.listOfStopsForRoute.push(
-          JSON.parse(JSON.stringify(stopWithMemberAttr)),
-        );
+        this.appActions.actAddtoListofStopsforRoutes({ relation: JSON.parse(JSON.stringify(stopWithMemberAttr)) });
       }
     });
     this.activateFilteredStopView(true);
@@ -600,7 +602,7 @@ export class ProcessService {
   }
 
   public cancelSelection(): void {
-    // this.refreshTagView(undefined);
+    this.refreshTagView(undefined);
     this.mapSrv.clearHighlight();
   }
 

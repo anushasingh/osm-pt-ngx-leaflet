@@ -1,4 +1,4 @@
-import { Component, isDevMode, ViewChild } from '@angular/core';
+import {Component, isDevMode, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import { NgRedux, select } from '@angular-redux/store';
 import { CarouselConfig, ModalDirective } from 'ngx-bootstrap';
 
@@ -16,6 +16,9 @@ import { AuthComponent } from '../auth/auth.component';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 
 import { IAppState } from '../../store/model';
+import { AppActions } from '../../store/app/actions';
+import { StorageService } from '../../services/storage.service';
+import {OverpassService} from '../../services/overpass.service';
 
 @Component({
   providers: [{ provide: CarouselConfig, useValue: { noPause: false } }],
@@ -25,7 +28,7 @@ import { IAppState } from '../../store/model';
   ],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   public advancedMode: boolean = Boolean(localStorage.getItem('advancedMode'));
 
   @ViewChild(ToolbarComponent) public toolbarComponent: ToolbarComponent;
@@ -33,7 +36,10 @@ export class AppComponent {
   @ViewChild('helpModal') public helpModal: ModalDirective;
 
   @select(['app', 'editing']) public readonly editing$: Observable<boolean>;
-
+  public listofStops_subscription;
+  public listofRelations_subscription;
+  public listofStops;
+  public listofRelations;
   constructor(
     private ngRedux: NgRedux<IAppState>,
     private editSrv: EditService,
@@ -41,10 +47,43 @@ export class AppComponent {
     private loadSrv: LoadService,
     private mapSrv: MapService,
     private processSrv: ProcessService,
+    private storageSrv: StorageService,
+    private overpassSrv: OverpassService,
+
   ) {
     if (isDevMode()) {
       console.log('WARNING: Ang. development mode is ', isDevMode());
     }
+    this.listofStops_subscription = ngRedux.subscribe(() => {
+      this.listofStops = ngRedux.getState()['app']['listofStops'];
+    });
+    this.listofRelations_subscription = ngRedux.subscribe(() => {
+      this.listofRelations = ngRedux.getState()['app']['listofRelations'];
+    });
+
+    this.mapSrv.markerClick.subscribe((data) => {
+      const featureId = Number(data);
+
+      if (this.storageSrv.elementsMap.has(featureId)) {
+        this.processSrv.exploreStop(
+          this.storageSrv.elementsMap.get(featureId),
+          false,
+          false,
+          false,
+          this.listofRelations,
+        );
+      }
+
+      if (
+        !this.storageSrv.elementsDownloaded.has(featureId) &&
+        featureId > 0
+      ) {
+        console.log('LOG (overpass s.) Requesting started for ', featureId);
+        this.overpassSrv.getNodeData(featureId,this.listofRelations);
+        this.storageSrv.elementsDownloaded.add(featureId);
+        console.log('LOG (overpass s.) Requesting finished for', featureId);
+      }
+    });
   }
 
   public ngOnInit(): any {
@@ -64,7 +103,7 @@ export class AppComponent {
 
     this.mapSrv.map = map;
     this.mapSrv.map.on('zoomend moveend', () => {
-      this.processSrv.filterDataInBounds();
+      this.processSrv.filterDataInBounds(this.listofStops);
       this.processSrv.addPositionToUrlHash();
     });
     if (
@@ -91,5 +130,9 @@ export class AppComponent {
 
   private changeMode(): void {
     localStorage.setItem('advancedMode', JSON.stringify(this.advancedMode));
+  }
+  ngOnDestroy(): void {
+    this.listofStops_subscription.unsubscribe();
+    this.listofRelations_subscription.unsubscribe();
   }
 }

@@ -2,6 +2,7 @@
 // In the 'standard' way, initialState is defined in reducers: http://redux.js.org/docs/basics/Reducers.html
 
 import {IPtMember} from '../core/ptMember';
+import { IPtRelationNew } from '../core/ptRelationNew.interface';
 
 export interface IRootAppState {
   // app: IAppState;
@@ -19,6 +20,9 @@ export interface IAppState {
     uid: number;
     tags: {};
   };
-  selectedObjectRoutes: object[];
+  listOfStopsForRoute: object[];
   cancelSelectElement: boolean;
+  listofStops: object[];
+  listofRelations: object[];
+
 }

@@ -1,7 +1,7 @@
 <div class="panel-group">
-<div class="panel panel-heading panel-default text-center">
-  <h4 class="text-danger" *ngIf="listOfRelations.length === 0">{{ 'There are no loaded routes (zoom map and select a feature).' | translate }}</h4>
-  <span>
+  <div class="panel panel-heading panel-default text-center">
+    <h4 class="text-danger" *ngIf="listOfRelations?.length === 0">{{ 'There are no loaded routes (zoom map and select a feature).' | translate }}</h4>
+    <span>
       <button *ngIf="filteredView" class="btn btn-warning" container="body"
               tooltip="{{ 'Cancel filter showing only routes related to selected node' | translate }}"
               (click)="cancelFilter()">
@@ -9,7 +9,7 @@
         &nbsp;{{ 'Cancel filter' | translate }}
       </button>
     </span>
-  <span *ngIf="editing$ | async">
+    <span *ngIf="editing$ | async">
       <button type="button" class="btn btn-default" container="body"
               tooltip="{{ 'Create a new empty route relation' | translate }}"
               (click)="createRoute()">
@@ -25,7 +25,7 @@
         &nbsp;{{ 'Change members' | translate }}
       </button>
     </span>
-  <span *ngIf="listOfRelations.length > 0" class="text-center medium">
+    <span *ngIf="listOfRelations?.length > 0" class="text-center medium">
       <button type="button" class="btn btn-default" container="body"
               tooltip="{{ 'Verify existence and download route_master relations for all currently available routes' | translate }}"
               [disabled]="isRequesting"
@@ -36,33 +36,33 @@
             tooltip="{{ 'Parent relations were not checked yet' | translate }}"></i>)
       </button>
     </span>
-</div>
+  </div>
 
-<div class="content panel panel-body panel-default"
-     *ngIf="(mylistOfRelations.length!=null && mylistOfRelations.length !== 0 && filteredView) || (listOfRelations.length !== 0 && !filteredView)">
+  <div class="content panel panel-body panel-default"
+       *ngIf="(listOfRelationsForStop?.length !== 0 && filteredView) || (listOfRelations?.length !== 0 && !filteredView)">
 
-  <div *ngIf="(!(cancel |async))&& mylistOfRelations.length !== 0 " class="medium">
-    <div *ngFor="let rel of mylistOfRelations; trackBy: trackByFn;">
+    <div *ngIf="listOfRelationsForStop?.length !== 0 && filteredView" class="medium">
+      <div *ngFor="let rel of listOfRelationsForStop; trackBy: trackByFn;">
         <span class="explore" [class.selected]="currentElement && isSelected(rel.id)"
               (mouseover)="exploreAvailableRelation($event, rel)" (click)="exploreRelation($event, rel)">
           {{rel.tags.route || "#TYPE" }} Route {{rel.tags.ref || "#REF"}}: {{rel.tags.from || "#FROM"}} => {{rel.tags.to || "#TO"}}, {{rel.tags.name || "#NAME"}}
         </span>
+      </div>
     </div>
-  </div>
 
-  <div *ngIf="listOfRelations.length !== 0 && !filteredView" class="medium">
-    <ng-container *ngFor="let rel of listOfMasters; trackBy: trackByFn;">
-      <div id="{{rel.id}}">
+    <div *ngIf=" listOfRelations?.length !== 0 && !filteredView" class="medium">
+      <ng-container *ngFor="let rel of listOfMasters; trackBy: trackByFn;">
+        <div id="{{rel.id}}">
           <span class="explore" (click)="exploreMaster($event, rel)" [class.selected]="currentElement && isSelected(rel.id)">
             <i *ngIf="rel.id < 0" class="fa fa-plus" container="body" aria-hidden="true"
                tooltip="{{ 'This route_master is created by you' | translate }}"></i>
             {{rel.tags.route_master || "#ROUTE_MASTER"}} <i>route <b>MASTER</b> ({{ rel.members.length }} members)</i> {{rel.tags.ref || "#REF"}}: {{rel.tags.name || "#NAME"}}
           </span>
-      </div>
-    </ng-container>
-    <ng-container *ngFor="let rel of listOfRelations; trackBy: trackByFn;">
-      <ng-container *ngIf="!hasMaster(rel.id)">
-        <div id="{{rel.id}}" *ngIf="visibleInMap(rel.id)==='visible' || visibleInMap(rel.id)==='warning'">
+        </div>
+      </ng-container>
+      <ng-container *ngFor="let rel of listOfRelations; trackBy: trackByFn;">
+        <ng-container *ngIf="!hasMaster(rel.id)">
+          <div id="{{rel.id}}" *ngIf="visibleInMap(rel.id)==='visible' || visibleInMap(rel.id)==='warning'">
             <span class="explore" (click)="exploreRelation($event, rel)" (mouseover)="exploreAvailableRelation($event, rel)"
                   [class.selected]="currentElement && isSelected(rel.id)">
               <span *ngIf="rel.id < 0">
@@ -92,11 +92,11 @@
               <span *ngIf="visibleInMap(rel.id)==='warning'" class="text-warning">!!!</span>
               {{rel.tags.route || "#TYPE" }} Route {{rel.tags.ref || "#REF"}}: {{rel.tags.from || "#FROM"}} => {{rel.tags.to || "#TO"}}, {{rel.tags.name || "#NAME"}}
             </span>
-        </div>
+          </div>
+        </ng-container>
       </ng-container>
-    </ng-container>
-  </div>
+    </div>
 
-</div>
+  </div>
 
 </div>

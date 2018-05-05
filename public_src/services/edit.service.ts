@@ -9,6 +9,7 @@ import { StorageService } from './storage.service';
 import { IPtStop } from '../core/ptStop.interface';
 import { IPtRelation } from '../core/ptRelation.interface';
 import { IPtRelationNew } from '../core/ptRelationNew.interface';
+import { AppActions } from '../store/app/actions';
 
 @Injectable()
 export class EditService {
@@ -23,6 +24,7 @@ export class EditService {
     private mapSrv: MapService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    private appActions: AppActions,
   ) {
     // local events
     this.currentTotalSteps.subscribe(
@@ -184,7 +186,7 @@ export class EditService {
         console.log('LOG (editing s.) I should add route', editObj);
         if (!this.storageSrv.elementsMap.get(editObj.id)) {
           this.storageSrv.elementsMap.set(editObj.id, editObj.change.to);
-          this.storageSrv.listOfRelations.push(editObj.change.to); // unshift
+          this.appActions.actAddToListOfRelations({ newRelation: editObj.change.to });
         } else {
           alert(
             'FIXME: this new ROUTE\'s ID already exists ' +
@@ -244,7 +246,7 @@ export class EditService {
     }
     if (['add element', 'add route'].indexOf(type) > -1) {
       if (type === 'add element') {
-        this.processSrv.exploreStop(element, false, false, false);
+        // this.processSrv.exploreStop(element, false, false, false);
       }
       this.storageSrv.logStats();
     }
@@ -848,7 +850,7 @@ export class EditService {
           edit,
         );
         this.storageSrv.elementsMap.set(edit.id, edit.change.to);
-        this.storageSrv.listOfRelations.push(edit.change.to);
+        this.appActions.actAddToListOfRelations({ newRelation: edit.change.to });
         this.processSrv.refreshTagView(
           this.storageSrv.elementsMap.get(edit.id),
         );
@@ -880,7 +882,7 @@ export class EditService {
     }
     const element = this.processSrv.getElementById(edit['id']);
     if (edit.type === 'add element') {
-      this.processSrv.exploreStop(element, false, false, false);
+      // this.processSrv.exploreStop(element, false, false, false);
     }
     if (edit.type !== 'add route' || element.tags.type !== 'route_master') {
       this.processSrv.zoomToElement(element);
@@ -993,7 +995,7 @@ export class EditService {
     }
     const element = this.processSrv.getElementById(edit['id']);
     if (edit.type === 'add element') {
-      this.processSrv.exploreStop(element, false, false, false);
+      // this.processSrv.exploreStop(element, false, false, false);
     }
     if (edit.type !== 'add route') {
       this.processSrv.zoomToElement(element);

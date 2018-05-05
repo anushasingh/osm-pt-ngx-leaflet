@@ -17,8 +17,10 @@ export class AppActions {
   static readonly EDIT_TAGVALUE = 'EDIT_TAGVALUE';
   static readonly ADD_TAG = 'ADD_TAG';
   static readonly REMOVE_TAG = 'REMOVE_TAG';
-  static readonly GET_NODE_RELATIONS = 'GET_NODE_RELATIONS ';
+  static readonly ADD_TO_LISTOFSTOPSFORROUTES = 'ADD_TO_LISTOFSTOPSFORROUTES';
   static readonly CANCEL_SELECT_ELEMENT = 'CANCEL_SELECT_ELEMENT';
+  static readonly ADD_TO_LISTOFSTOPS = 'ADD_TO_LISTOFSTOPS';
+  static readonly ADD_TO_LISTOFRELATIONS = 'ADD_TO_LISTOFRELATIONS';
   // basic sync action
   public actToggleEditing = (): Action => {
     return this.ngRedux.dispatch({
@@ -74,20 +76,37 @@ export class AppActions {
       },
     });
   }
-  public actGetNodeRelations = (args): Action => {
+  public actAddtoListofStopsforRoutes = (args): Action => {
       const {relation} = args;
       return this.ngRedux.dispatch({
-        type: AppActions.GET_NODE_RELATIONS,
+        type: AppActions.ADD_TO_LISTOFSTOPSFORROUTES,
         payload: {
           relation,
         },
       });
-
   }
-
   public actCancelSelectElement = (): Action => {
     return this.ngRedux.dispatch({
       type: AppActions.CANCEL_SELECT_ELEMENT,
+    });
+  }
+  public actAddToListOfStops = (args): Action => {
+    console.log('ac add to list of stops');
+    const { newStop } = args;
+    return this.ngRedux.dispatch({
+      type: AppActions.ADD_TO_LISTOFSTOPS,
+      payload : {
+        newStop,
+      },
+    });
+  }
+  public actAddToListOfRelations = (args): Action => {
+    const { newRelation } = args;
+    return this.ngRedux.dispatch({
+      type: AppActions.ADD_TO_LISTOFRELATIONS,
+      payload : {
+        newRelation,
+      },
     });
   }
 }

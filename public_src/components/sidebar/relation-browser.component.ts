@@ -33,28 +33,28 @@ export class RelationBrowserComponent {
   }
 
   ngOnInit(): void {
-    this.processSrv.refreshSidebarViews$.subscribe((data) => {
-      if (data === 'tag') {
-        console.log('LOG (relation-browser) Current selected element changed - ', data);
-        if (this.storageSrv.currentElement.tags.type === 'route_master') {
-          // prevent showing members of everything except route_master
-          this.currentElement = this.storageSrv.currentElement;
-        }
-      } else if (data === 'cancel selection') {
-        this.currentElement = undefined;
-        delete this.currentElement;
-        this.storageSrv.listOfVariants.length = 0;
-        this.listOfVariants.length = 0;
-      }
-    });
-
-    this.processSrv.refreshSidebarViews$.subscribe((data) => {
-      if (data === 'relation') {
-        this.listOfVariants = this.storageSrv.listOfVariants;
-        console.log('LOG (relation-browser) List of variants ', this.storageSrv.listOfVariants,
-          ' currentElement', this.storageSrv.currentElement);
-      }
-    });
+    // this.processSrv.refreshSidebarViews$.subscribe((data) => {
+    //   if (data === 'tag') {
+    //     console.log('LOG (relation-browser) Current selected element changed - ', data);
+    //     if (this.storageSrv.currentElement.tags.type === 'route_master') {
+    //       // prevent showing members of everything except route_master
+    //       this.currentElement = this.storageSrv.currentElement;
+    //     }
+    //   } else if (data === 'cancel selection') {
+    //     this.currentElement = undefined;
+    //     delete this.currentElement;
+    //     this.storageSrv.listOfVariants.length = 0;
+    //     this.listOfVariants.length = 0;
+    //   }
+    // });
+    //
+    // this.processSrv.refreshSidebarViews$.subscribe((data) => {
+    //   if (data === 'relation') {
+    //     this.listOfVariants = this.storageSrv.listOfVariants;
+    //     console.log('LOG (relation-browser) List of variants ', this.storageSrv.listOfVariants,
+    //       ' currentElement', this.storageSrv.currentElement);
+    //   }
+    // });
   }
 
   /**

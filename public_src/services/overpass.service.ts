@@ -47,28 +47,28 @@ export class OverpassService {
     /**
      * @param data - string containing ID of clicked marker
      */
-    this.mapSrv.markerClick.subscribe((data) => {
-      const featureId = Number(data);
-
-      if (this.storageSrv.elementsMap.has(featureId)) {
-        this.processSrv.exploreStop(
-          this.storageSrv.elementsMap.get(featureId),
-          false,
-          false,
-          false,
-        );
-      }
-
-      if (
-        !this.storageSrv.elementsDownloaded.has(featureId) &&
-        featureId > 0
-      ) {
-        console.log('LOG (overpass s.) Requesting started for ', featureId);
-        this.getNodeData(featureId);
-        this.storageSrv.elementsDownloaded.add(featureId);
-        console.log('LOG (overpass s.) Requesting finished for', featureId);
-      }
-    });
+    // this.mapSrv.markerClick.subscribe((data) => {
+    //   const featureId = Number(data);
+    //
+    //   if (this.storageSrv.elementsMap.has(featureId)) {
+    //     this.processSrv.exploreStop(
+    //       this.storageSrv.elementsMap.get(featureId),
+    //       false,
+    //       false,
+    //       false,
+    //     );
+    //   }
+    //
+    //   if (
+    //     !this.storageSrv.elementsDownloaded.has(featureId) &&
+    //     featureId > 0
+    //   ) {
+    //     console.log('LOG (overpass s.) Requesting started for ', featureId);
+    //     this.getNodeData(featureId);
+    //     this.storageSrv.elementsDownloaded.add(featureId);
+    //     console.log('LOG (overpass s.) Requesting finished for', featureId);
+    //   }
+    // });
 
     /**
      * Handles downloading of missing relation members (nodes, ways).
@@ -128,7 +128,7 @@ export class OverpassService {
    * Downloads route_master relations for currently added route relations.
    * @minNumOfRelations: number
    */
-  public getRouteMasters(minNumOfRelations?: number): void {
+  public getRouteMasters(minNumOfRelations: number, listofRelations: object[]): void {
     if (!minNumOfRelations) {
       minNumOfRelations = 10;
     }
@@ -138,7 +138,7 @@ export class OverpassService {
         this.loadSrv.hide(); // close loading window on timeout errors
       }
     }, 7500);
-    const idsArr: Array<number> = this.findRouteIdsWithoutMaster();
+    const idsArr: Array<number> = this.findRouteIdsWithoutMaster(listofRelations);
     if (idsArr.length <= minNumOfRelations) {
       this.loadSrv.hide();
       return console.log(
@@ -231,7 +231,9 @@ export class OverpassService {
    * Downloads all data for currently selected node.
    * @param featureId
    */
-  private getNodeData(featureId: number): void {
+  public getNodeData(featureId: number, listofRelations: object[]): void {
+    console.log('[overpass service], getnodedata(), calss' +
+      ' processnoderesponse of process service');
     let requestBody = `
       [out:json][timeout:25];
       (
@@ -258,7 +260,7 @@ export class OverpassService {
           console.log('LOG (overpass s.)', res);
           this.processSrv.processNodeResponse(res);
           this.loadSrv.hide();
-          this.getRouteMasters(10);
+          this.getRouteMasters(10, listofRelations);
           // TODO this.processSrv.drawStopAreas();
         },
         (err) => {
@@ -323,9 +325,9 @@ export class OverpassService {
   /**
    * Finds routes which were not queried to find their possible master relation.
    */
-  private findRouteIdsWithoutMaster(): Array<number> {
+  private findRouteIdsWithoutMaster(listofRelations: object[]): Array<number> {
     const idsArr = [];
-    this.storageSrv.listOfRelations.forEach((rel) => {
+    listofRelations.forEach((rel) => {
       if (!this.storageSrv.queriedMasters.has(rel['id'])) {
         idsArr.push(rel['id']);
       }

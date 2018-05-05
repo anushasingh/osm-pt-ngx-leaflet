@@ -5,8 +5,10 @@ import { AppActions } from './actions';
 export const INITIAL_STATE: IAppState = {
   editing: false,
   selectObject: null,
-  selectedObjectRoutes: [],
+  listOfStopsForRoute: [],
   cancelSelectElement: false,
+  listofStops: [],
+  listofRelations: [],
 };
 
 export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction): any {
@@ -20,7 +22,7 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
       return {
         ...state,
         selectObject: action.payload,
-        selectedObjectRoutes : [],
+        listOfStopsForRoute : [],
       };
 
     case AppActions.EDIT_TAGVALUE:
@@ -82,15 +84,27 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
             tags: afterRemoveTags,
           },
   };
-    case AppActions.GET_NODE_RELATIONS:
+    case AppActions.ADD_TO_LISTOFSTOPSFORROUTES:
       return {
         ...state,
-        selectedObjectRoutes : [...state.selectedObjectRoutes, action.payload.relation],
+        listOfStopsForRoute : [...state.listOfStopsForRoute, action.payload.relation],
    };
     case AppActions.CANCEL_SELECT_ELEMENT:
       return {
         ...state,
         cancelSelectElement : true,
+        listOfStopsForRoute: null,
+        selectedObject: null,
+      };
+    case AppActions.ADD_TO_LISTOFSTOPS:
+      return {
+        ...state,
+        listofStops : [...state.listofStops, action.payload.newStop],
+      };
+    case AppActions.ADD_TO_LISTOFRELATIONS:
+      return {
+        ...state,
+        listofRelations : [...state.listofRelations, action.payload.newRelation],
       };
        default:
   // We don't care about any other actions right now.

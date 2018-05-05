@@ -24,15 +24,18 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
 
   public currentElement;
   public listOfMasters: object[] = this.storageSrv.listOfMasters;
-  public listOfRelations: object[] = this.storageSrv.listOfRelations;
-  public listOfRelationsForStop: object[] = this.storageSrv.listOfRelationsForStop;
-  public mylistOfRelations ;
+  // public listOfRelations: object[] = this.storageSrv.listOfRelations;
+  // public listOfRelationsForStop: object[] = this.storageSrv.listOfRelationsForStop;
+  public mylistOfRelations: object[] ;
+  public listOfRelationsForStop: object[];
   public isRequesting: boolean;
   public filteredView: boolean;
   private idsHaveMaster = new Set();
   public membersEditing: boolean = false;
   public subscription;
+  public listOfRelations_subscription;
   public mycurrentElement;
+  public listOfRelations;
   constructor(
     private editSrv: EditService,
     private mapSrv: MapService,
@@ -42,7 +45,10 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
     ngRedux: NgRedux<IAppState>,
   ) {
     this.subscription = ngRedux.subscribe(() => {
-      this.mylistOfRelations = ngRedux.getState()['app']['selectedObjectRoutes'];
+      this.mylistOfRelations = ngRedux.getState()['app']['listOfStopsForRoute'];
+    });
+    this.listOfRelations_subscription = ngRedux.subscribe(() => {
+      this.listOfRelations = ngRedux.getState()['app']['listofRelations'];
     });
   }
 
@@ -50,17 +56,17 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
     this.processSrv.showRelationsForStop$.subscribe((data) => {
       this.filteredView = data;
     });
-    this.processSrv.refreshSidebarViews$.subscribe((data) => {
-      if (data === 'route') {
-        this.listOfRelationsForStop = this.storageSrv.listOfRelationsForStop;
-        this.currentElement = this.storageSrv.currentElement;
-      } else if (data === 'tag') {
-        this.currentElement = this.storageSrv.currentElement;
-      } else if (data === 'cancel selection') {
-        this.currentElement = undefined;
-        delete this.currentElement;
-      }
-    });
+    // this.processSrv.refreshSidebarViews$.subscribe((data) => {
+    //   if (data === 'route') {
+    //     this.listOfRelationsForStop = this.storageSrv.listOfRelationsForStop;
+    //     this.currentElement = this.storageSrv.currentElement;
+    //   } else if (data === 'tag') {
+    //     this.currentElement = this.storageSrv.currentElement;
+    //   } else if (data === 'cancel selection') {
+    //     this.currentElement = undefined;
+    //     delete this.currentElement;
+    //   }
+    // });
     this.processSrv.refreshMasters.subscribe((data) => {
       this.isRequesting = false;
       data['idsHaveMaster'].forEach((id) => {
@@ -139,7 +145,7 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   private downloadMaster(): void {
     this.isRequesting = true;
     console.log('LOG (route-browser) Manually downloading masters');
-    this.overpassSrv.getRouteMasters(1);
+    this.overpassSrv.getRouteMasters(1, this.listOfRelations);
   }
 
   private createRoute(): void {
@@ -199,5 +205,6 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    this.listOfRelations_subscription.unsubscribe();
   }
 }
