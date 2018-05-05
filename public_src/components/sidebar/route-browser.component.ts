@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 
 import { EditService } from '../../services/edit.service';
 import { MapService } from '../../services/map.service';
@@ -25,16 +25,13 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   public currentElement;
   public listOfMasters: object[] = this.storageSrv.listOfMasters;
   // public listOfRelations: object[] = this.storageSrv.listOfRelations;
-  // public listOfRelationsForStop: object[] = this.storageSrv.listOfRelationsForStop;
-  public mylistOfRelations: object[] ;
-  public listOfRelationsForStop: object[];
+  public listOfRelationsForStop: object[] = this.storageSrv.listOfRelationsForStop;
+  // public listOfRelationsForStop: object[];
   public isRequesting: boolean;
   public filteredView: boolean;
   private idsHaveMaster = new Set();
   public membersEditing: boolean = false;
-  public subscription;
   public listOfRelations_subscription;
-  public mycurrentElement;
   public listOfRelations;
   constructor(
     private editSrv: EditService,
@@ -44,9 +41,6 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
     private storageSrv: StorageService,
     ngRedux: NgRedux<IAppState>,
   ) {
-    this.subscription = ngRedux.subscribe(() => {
-      this.mylistOfRelations = ngRedux.getState()['app']['listOfStopsForRoute'];
-    });
     this.listOfRelations_subscription = ngRedux.subscribe(() => {
       this.listOfRelations = ngRedux.getState()['app']['listofRelations'];
     });
@@ -204,7 +198,7 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+    // this.subscription.unsubscribe();
     this.listOfRelations_subscription.unsubscribe();
   }
 }

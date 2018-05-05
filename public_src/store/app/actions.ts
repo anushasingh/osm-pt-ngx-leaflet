@@ -21,6 +21,7 @@ export class AppActions {
   static readonly CANCEL_SELECT_ELEMENT = 'CANCEL_SELECT_ELEMENT';
   static readonly ADD_TO_LISTOFSTOPS = 'ADD_TO_LISTOFSTOPS';
   static readonly ADD_TO_LISTOFRELATIONS = 'ADD_TO_LISTOFRELATIONS';
+  static readonly ADD_TO_LISTOFRELATIONSFORSTOP = 'ADD_TO_LISTOFRELATIONSFORSTOP';
   // basic sync action
   public actToggleEditing = (): Action => {
     return this.ngRedux.dispatch({
@@ -104,6 +105,15 @@ export class AppActions {
     const { newRelation } = args;
     return this.ngRedux.dispatch({
       type: AppActions.ADD_TO_LISTOFRELATIONS,
+      payload : {
+        newRelation,
+      },
+    });
+  }
+  public actAddToListOfRelationsForStop = (args): Action => {
+    const { newRelation } = args;
+    return this.ngRedux.dispatch({
+      type: AppActions.ADD_TO_LISTOFRELATIONSFORSTOP,
       payload : {
         newRelation,
       },

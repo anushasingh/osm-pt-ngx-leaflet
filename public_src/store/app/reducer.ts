@@ -9,6 +9,7 @@ export const INITIAL_STATE: IAppState = {
   cancelSelectElement: false,
   listofStops: [],
   listofRelations: [],
+  listOfRelationsForStop: [],
 };
 
 export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction): any {
@@ -105,6 +106,11 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
       return {
         ...state,
         listofRelations : [...state.listofRelations, action.payload.newRelation],
+      };
+    case AppActions.ADD_TO_LISTOFRELATIONSFORSTOP:
+      return {
+        ...state,
+        listOfRelationsForStop : [...state.listOfRelationsForStop, action.payload.newRelation],
       };
        default:
   // We don't care about any other actions right now.
