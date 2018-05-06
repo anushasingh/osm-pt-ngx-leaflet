@@ -24,5 +24,7 @@ export interface IAppState {
   cancelSelectElement: boolean;
   listofStops: object[];
   listofRelations: object[];
+  listOfMasters: object[];
+  listOfVariants: object[];
   listOfRelationsForStop: object[];
 }

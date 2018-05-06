@@ -17,11 +17,15 @@ export class AppActions {
   static readonly EDIT_TAGVALUE = 'EDIT_TAGVALUE';
   static readonly ADD_TAG = 'ADD_TAG';
   static readonly REMOVE_TAG = 'REMOVE_TAG';
-  static readonly UPDATE_LISTOFSTOPSFORROUTE = 'UPDATE_LISTOFSTOPSFORROUTE';
+  static readonly CREATE_LISTOFSTOPSFORROUTE = 'CREATE_LISTOFSTOPSFORROUTE';
   static readonly CANCEL_SELECT_ELEMENT = 'CANCEL_SELECT_ELEMENT';
   static readonly ADD_TO_LISTOFSTOPS = 'ADD_TO_LISTOFSTOPS';
   static readonly ADD_TO_LISTOFRELATIONS = 'ADD_TO_LISTOFRELATIONS';
-  static readonly ADD_TO_LISTOFRELATIONSFORSTOP = 'ADD_TO_LISTOFRELATIONSFORSTOP';
+  static readonly POP_LISTOFRELATIONS = 'POP_LISTOFRELATIONS';
+  static readonly ADD_TO_LISTOFMASTERS = 'ADD_TO_LISTOFMASTERS';
+  static readonly POP_LISTOFMASTERS = 'POP_LISTOFMASTERS';
+  static readonly CREATE_LISTOFVARIANTS = 'CREATE_LISTOFVARIANTS';
+  static readonly CREATE_LISTOFRELATIONSFORSTOP = 'CREATE_LISTOFRELATIONSFORSTOP';
   // basic sync action
   public actToggleEditing = (): Action => {
     return this.ngRedux.dispatch({
@@ -80,7 +84,7 @@ export class AppActions {
   public actUpdateListofStopsforRoute = (args): Action => {
       const { relations } = args;
       return this.ngRedux.dispatch({
-        type: AppActions.UPDATE_LISTOFSTOPSFORROUTE,
+        type: AppActions.CREATE_LISTOFSTOPSFORROUTE,
         payload: {
           relations,
         },
@@ -110,12 +114,40 @@ export class AppActions {
       },
     });
   }
-  public actAddToListOfRelationsForStop = (args): Action => {
-    const { newRelation } = args;
+  public actPopListOfRelations = (): Action => {
     return this.ngRedux.dispatch({
-      type: AppActions.ADD_TO_LISTOFRELATIONSFORSTOP,
+      type: AppActions.POP_LISTOFRELATIONS,
+    });
+  }
+  public actAddToListOfMasters = (args): Action => {
+    const { newMasters } = args;
+    return this.ngRedux.dispatch({
+      type: AppActions.ADD_TO_LISTOFMASTERS,
       payload : {
-        newRelation,
+        newMasters,
+      },
+    });
+  }
+  public actPopListOfMasters = (): Action => {
+    return this.ngRedux.dispatch({
+      type: AppActions.POP_LISTOFMASTERS,
+    });
+  }
+  public actCreateListOfVariants = (args): Action => {
+    const { newVariants } = args;
+    return this.ngRedux.dispatch({
+      type: AppActions.CREATE_LISTOFVARIANTS,
+      payload : {
+        newVariants,
+      },
+    });
+  }
+  public actCreateListOfRelationsForStop = (args): Action => {
+    const { newRelations } = args;
+    return this.ngRedux.dispatch({
+      type: AppActions.CREATE_LISTOFRELATIONSFORSTOP,
+      payload : {
+        newRelations,
       },
     });
   }

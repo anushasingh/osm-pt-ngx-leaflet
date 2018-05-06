@@ -151,7 +151,6 @@ export class ProcessService {
 
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
               listOfStops.push(element);
-              // this.appActions.actAddToListOfStops({ newStop: element });
             }
             break;
           case 'relation':
@@ -165,7 +164,7 @@ export class ProcessService {
       }
     }
     if (listOfStops.length > 0) {
-      this.appActions.actAddToListOfStops({newStops: listOfStops});
+      this.appActions.actAddToListOfStops({ newStops: listOfStops });
     }
     if (listOfRelations.length > 0) {
     this.appActions.actAddToListOfRelations({ newRelations : listOfRelations }); }
@@ -187,18 +186,22 @@ export class ProcessService {
    * @param response
    */
   public processMastersResponse(response: object): void {
+    let listOfMasters: object[] = [];
     response['elements'].forEach((element) => {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         console.log('LOG (processing s.) New element added:', element);
         this.storageSrv.elementsMap.set(element.id, element);
         this.storageSrv.elementsDownloaded.add(element.id);
         if (element.tags.route_master) {
-          this.storageSrv.listOfMasters.push(element);
+          listOfMasters.push(element);
         } else {
           console.log('LOG (processing s.) WARNING: new elements? ', element);
         } // do not add other relations because they should be already added
       }
     });
+    if (listOfMasters.length > 0) {
+      this.appActions.actAddToListOfMasters({ newMasters: listOfMasters });
+    }
     console.log(
       'LOG (processing s.) Total # of master rel. (route_master)',
       this.storageSrv.listOfMasters.length,
@@ -206,7 +209,7 @@ export class ProcessService {
     this.storageSrv.logStats();
 
     const idsHaveMaster: number[] = [];
-    this.storageSrv.listOfMasters.forEach((master) => {
+    listOfMasters.forEach((master) => {
       for (const member of master['members']) {
         idsHaveMaster.push(member['ref']);
       }
@@ -324,13 +327,16 @@ export class ProcessService {
    * @param rel
    */
   public refreshRelationView(rel: IPtRelation): void {
-    this.storageSrv.listOfVariants.length = 0;
+    let listOfVariants: object[] = [];
+    // this.storageSrv.listOfVariants.length = 0;
     if (rel.tags.type === 'route_master') {
       for (const member of rel.members) {
         const routeVariant = this.getElementById(member.ref);
-        this.storageSrv.listOfVariants.push(routeVariant);
+        listOfVariants.push(routeVariant);
+        // this.storageSrv.listOfVariants.push(routeVariant);
       }
     }
+    this.appActions.actCreateListOfVariants({ newVariants: listOfVariants });
     // this.refreshSidebarView('relation');
   }
 
@@ -493,15 +499,16 @@ export class ProcessService {
     filterRelations: boolean,
     refreshTags: boolean,
     zoomTo: boolean,
-    listofRelations: object[],
+    listofRelationsForStop: object[],
   ): void {
+    this.appActions.actSelectElement({ element: stop });
     if (this.mapSrv.highlightIsActive()) {
       this.mapSrv.clearHighlight();
     }
     this.mapSrv.showStop(stop);
     if (filterRelations) {
-      const filteredRelationsForStop = this.filterRelationsByStop(stop, listofRelations);
-      this.mapSrv.showRelatedRoutes(filteredRelationsForStop);
+      // const filteredRelationsForStop = this.filterRelationsByStop(stop, listofRelations);
+      this.mapSrv.showRelatedRoutes(listofRelationsForStop);
     }
     this.mapSrv.addExistingHighlight();
     if (refreshTags) {
@@ -517,18 +524,18 @@ export class ProcessService {
    * @param stop
    */
   public filterRelationsByStop(stop: IPtStop, listofRelations: object[]): object[] {
-    this.storageSrv.listOfRelationsForStop = [];
-
+    let listOfRelationsForStop: object[] = [];
     for (const relation of listofRelations) {
       for (const member of relation['members']) {
         if (member['ref'] === stop.id) {
-          this.storageSrv.listOfRelationsForStop.push(relation);
+          listOfRelationsForStop.push(relation);
         }
       }
     }
+    // this.appActions.actCreateListOfRelationsForStop({ newRelations: listOfRelationsForStop });
     this.activateFilteredRouteView(true);
     // this.refreshSidebarView('route');
-    return this.storageSrv.listOfRelationsForStop;
+    return listOfRelationsForStop;
   }
 
   /**

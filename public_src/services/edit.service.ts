@@ -189,7 +189,7 @@ export class EditService {
           this.storageSrv.elementsMap.set(editObj.id, editObj.change.to);
           listOfRelations.push(editObj.change.to);
           if (listOfRelations.length > 0) {
-          this.appActions.actAddToListOfRelations({ newRelations: listOfRelations });}
+          this.appActions.actAddToListOfRelations({ newRelations: listOfRelations }); }
         } else {
           alert(
             'FIXME: this new ROUTE\'s ID already exists ' +
@@ -211,7 +211,9 @@ export class EditService {
         console.log('LOG (editing s.) I should add route_master', editObj);
         if (!this.storageSrv.elementsMap.get(editObj.id)) {
           this.storageSrv.elementsMap.set(editObj.id, editObj.change.to);
-          this.storageSrv.listOfMasters.push(editObj.change.to); // unshift
+          let listOfMasters: object[] = [];
+          listOfMasters.push(editObj.change.to);
+          this.appActions.actAddToListOfMasters({ newMasters: listOfMasters });
         } else {
           alert(
             'FIXME: this new ROUTE\'s ID already exists ' +
@@ -856,7 +858,7 @@ export class EditService {
         this.storageSrv.elementsMap.set(edit.id, edit.change.to);
         listOfRoutes.push(edit.change.to);
         if (listOfRoutes.length > 0) {
-        this.appActions.actAddToListOfRelations({ newRelations: listOfRoutes });}
+        this.appActions.actAddToListOfRelations({ newRelations: listOfRoutes }); }
         this.processSrv.refreshTagView(
           this.storageSrv.elementsMap.get(edit.id),
         );
@@ -878,7 +880,10 @@ export class EditService {
       case 'create master':
         console.log('LOG (editing s.) I should add route_master', edit);
         this.storageSrv.elementsMap.set(edit.id, edit.change.to);
-        this.storageSrv.listOfMasters.push(edit.change.to); // unshift
+        let listOfMasters: object[] = [];
+        listOfMasters.push(edit.change.to);
+        // this.storageSrv.listOfMasters.push(edit.change.to); // unshift
+        this.appActions.actAddToListOfMasters({ newMasters: listOfMasters });
         let masterRel = this.storageSrv.elementsMap.get(edit.id);
         this.processSrv.refreshTagView(masterRel);
         this.processSrv.refreshRelationView(masterRel);
@@ -970,8 +975,7 @@ export class EditService {
       case 'add route':
         console.log('LOG (editing s.) Should undo this created route', edit);
         this.storageSrv.elementsMap.set(edit.id, edit.change.to);
-        this.storageSrv.listOfRelations.length =
-          this.storageSrv.listOfRelations.length - 1;
+        this.appActions.actPopListOfRelations();
         this.processSrv.refreshTagView(undefined);
         break;
       case 'toggle members':
@@ -993,7 +997,7 @@ export class EditService {
           'LOG (editing s.) Should undo this route_master creation',
           edit,
         );
-        this.storageSrv.listOfMasters.pop();
+        this.appActions.actPopListOfMasters();
         this.processSrv.refreshTagView(undefined);
         break;
       default:

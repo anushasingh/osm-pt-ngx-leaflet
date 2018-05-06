@@ -23,16 +23,18 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   @select(['app', 'cancelSelectElement']) public readonly cancel: Observable<boolean>;
 
   public currentElement;
-  public listOfMasters: object[] = this.storageSrv.listOfMasters;
+  // public listOfMasters: object[] = this.storageSrv.listOfMasters;
   // public listOfRelations: object[] = this.storageSrv.listOfRelations;
   public listOfRelationsForStop: object[] = this.storageSrv.listOfRelationsForStop;
   // public listOfRelationsForStop: object[];
+  public listOfMasters;
   public isRequesting: boolean;
   public filteredView: boolean;
   private idsHaveMaster = new Set();
   public membersEditing: boolean = false;
   public listOfRelations_subscription;
   public listOfRelations;
+  public listOfMasters_subscription;
   constructor(
     private editSrv: EditService,
     private mapSrv: MapService,
@@ -43,6 +45,9 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   ) {
     this.listOfRelations_subscription = ngRedux.subscribe(() => {
       this.listOfRelations = ngRedux.getState()['app']['listofRelations'];
+    });
+    this.listOfMasters_subscription = ngRedux.subscribe(() => {
+      this.listOfMasters = ngRedux.getState()['app']['listOfMasters'];
     });
   }
 
@@ -198,7 +203,7 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // this.subscription.unsubscribe();
     this.listOfRelations_subscription.unsubscribe();
+    this.listOfMasters_subscription.unsubscribe();
   }
 }

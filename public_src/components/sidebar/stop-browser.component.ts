@@ -11,7 +11,7 @@ import { IPtStop } from '../../core/ptStop.interface';
 
 import { Observable } from 'rxjs/Observable';
 // import { select } from '@angular-redux/store';
-// import { AppActions } from '../../store/app/actions';
+import { AppActions } from '../../store/app/actions';
 import { NgRedux, select } from '@angular-redux/store';
 import { IAppState } from '../../store/model';
 
@@ -25,26 +25,25 @@ import { IAppState } from '../../store/model';
   templateUrl: './stop-browser.component.html',
 })
 export class StopBrowserComponent implements OnInit, OnDestroy {
-  // public listOfStopsForRoute: object[] = this.storageSrv.listOfStopsForRoute;
   public listOfStopsForRoute;
   public currentElement: any;
-  // public listOfStops: object[] = this.storageSrv.listOfStops;
   public filteredView: boolean;
   @select(['app', 'editing']) public readonly editing$: Observable<boolean>;
-  // @select(['app', 'listofStops']) public readonly listofStops$: Observable<boolean>;
-  // @select(['app', 'selectObject']) public readonly currentElement: Observable<boolean>;
   public listOfStops;
   public listofRelations;
+  public listOfRelationsForStop;
   public subscription;
   public selectedObject_subscription;
   public listofStops_subscription;
   public listOfStopsForRoute_subscription;
+  public listOfRelationsForStop_subscription;
   constructor(
     private dragulaSrv: DragulaService,
     private editSrv: EditService,
     private mapSrv: MapService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    private appActions: AppActions,
     ngRedux: NgRedux<IAppState>,
   ) {
     dragulaSrv.drop.subscribe((value) => {
@@ -61,6 +60,9 @@ export class StopBrowserComponent implements OnInit, OnDestroy {
     });
     this.listOfStopsForRoute_subscription = ngRedux.subscribe(() => {
       this.listOfStopsForRoute = ngRedux.getState()['app']['listOfStopsForRoute'];
+    });
+    this.listOfRelationsForStop_subscription = ngRedux.subscribe(() => {
+      this.listOfRelationsForStop = ngRedux.getState()['app']['listOfRelationsForStop'];
     });
   }
 
@@ -128,7 +130,9 @@ export class StopBrowserComponent implements OnInit, OnDestroy {
   }
 
   private exploreStop($event: any, stop: IPtStop): void {
-    this.processSrv.exploreStop(stop, true, true, true, this.listofRelations);
+    let listOfRelationsForStop = this.processSrv.filterRelationsByStop(stop, this.listofRelations);
+    this.appActions.actCreateListOfRelationsForStop({ newRelations: listOfRelationsForStop });
+    this.processSrv.exploreStop(stop, true, true, true, this.listOfRelationsForStop);
   }
 
   private isSelected(relId: number): boolean {
@@ -151,5 +155,6 @@ export class StopBrowserComponent implements OnInit, OnDestroy {
     this.selectedObject_subscription.unsubscribe();
     this.listofStops_subscription.unsubscribe();
     this.listOfStopsForRoute_subscription.unsubscribe();
+    this.listOfRelationsForStop_subscription.unsubscribe();
   }
 }

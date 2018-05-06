@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 
 import { ProcessService } from '../../services/process.service';
 import { StorageService } from '../../services/storage.service';
@@ -7,7 +7,8 @@ import { ModalDirective } from 'ngx-bootstrap';
 
 import { IPtRouteMasterNew } from '../../core/ptRouteMasterNew.interface';
 import { Observable } from 'rxjs/Observable';
-import { select } from '@angular-redux/store';
+import {NgRedux, select} from '@angular-redux/store';
+import {IAppState} from '../../store/model';
 
 @Component({
   providers: [],
@@ -18,18 +19,26 @@ import { select } from '@angular-redux/store';
   ],
   templateUrl: './relation-browser.component.html',
 })
-export class RelationBrowserComponent {
+export class RelationBrowserComponent implements OnInit, OnDestroy {
   private currentElement: IPtRouteMasterNew;
-  public listOfVariants = this.storageSrv.listOfVariants;
+  // public listOfVariants = this.storageSrv.listOfVariants;
+  public listOfVariants;
   @select(['app', 'editing']) public readonly editing$: Observable<boolean>;
-  public listOfMasters = this.storageSrv.listOfMasters;
-
+  public listOfMasters;
+  public listOfMasters_subscription;
+  public listOfVariants_subscription;
   constructor(
     private editSrv: EditService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    ngRedux: NgRedux<IAppState>,
   ) {
-    //
+    this.listOfMasters_subscription = ngRedux.subscribe(() => {
+      this.listOfMasters = ngRedux.getState()['app']['listOfMasters'];
+    });
+    this.listOfVariants_subscription = ngRedux.subscribe(() => {
+      this.listOfVariants = ngRedux.getState()['app']['listOfVariants'];
+    });
   }
 
   ngOnInit(): void {
@@ -134,5 +143,9 @@ export class RelationBrowserComponent {
 
   private isSelected(relId: number): boolean {
     return this.processSrv.haveSameIds(relId, this.currentElement.id);
+  }
+  ngOnDestroy(): void {
+    this.listOfMasters_subscription.unsubscribe();
+    this.listOfVariants_subscription.unsubscribe();
   }
 }

@@ -79,7 +79,7 @@ export class AppComponent implements OnInit, OnDestroy {
         featureId > 0
       ) {
         console.log('LOG (overpass s.) Requesting started for ', featureId);
-        this.overpassSrv.getNodeData(featureId,this.listofRelations);
+        this.overpassSrv.getNodeData(featureId, this.listofRelations);
         this.storageSrv.elementsDownloaded.add(featureId);
         console.log('LOG (overpass s.) Requesting finished for', featureId);
       }
