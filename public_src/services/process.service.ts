@@ -136,6 +136,8 @@ export class ProcessService {
    * @param response
    */
   public processNodeResponse(response: any): void {
+    let listOfStops: object [] = [];
+    let listOfRelations: object [] = [];
     for (const element of response.elements) {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
@@ -148,19 +150,25 @@ export class ProcessService {
             this.storageSrv.elementsDownloaded.add(element.id);
 
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
-              this.appActions.actAddToListOfStops({ newStop: element });
+              listOfStops.push(element);
+              // this.appActions.actAddToListOfStops({ newStop: element });
             }
             break;
           case 'relation':
             if (element.tags.public_transport === 'stop_area') {
               this.storageSrv.listOfAreas.push(element);
             } else {
-              this.appActions.actAddToListOfRelations({ newRelation : element });
+              listOfRelations.push(element);
               break;
             }
         }
       }
     }
+    if (listOfStops.length > 0) {
+      this.appActions.actAddToListOfStops({newStops: listOfStops});
+    }
+    if (listOfRelations.length > 0) {
+    this.appActions.actAddToListOfRelations({ newRelations : listOfRelations }); }
     this.storageSrv.logStats();
   }
 
@@ -213,6 +221,8 @@ export class ProcessService {
    */
   public createLists(id: number): void {
     const response = this.storageSrv.localJsonStorage.get(id);
+    let listOfStops: object[] = [];
+    let listOfRelations: object[] = [];
     response.elements.forEach((element) => {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
@@ -225,19 +235,23 @@ export class ProcessService {
               ['platform', 'stop_position', 'station']
                 .indexOf(element.tags.public_transport) > -1
             ) {
-              this.appActions.actAddToListOfStops({ newStop: element });
+              listOfStops.push(element);
             }
             break;
           case 'relation':
             if (element.tags.public_transport === 'stop_area') {
               this.storageSrv.listOfAreas.push(element);
             } else if (element.tags.public_transport) {
-              this.appActions.actAddToListOfRelations({ newRelation: element });
+              listOfRelations.push(element);
               break;
             }
         }
       }
     });
+    if (listOfStops.length > 0) {
+      this.appActions.actAddToListOfStops({ newStops: listOfStops }); }
+    if (listOfRelations.length > 0) {
+    this.appActions.actAddToListOfRelations({ newRelations: listOfRelations }); }
     this.storageSrv.logStats();
   }
 
@@ -537,7 +551,9 @@ export class ProcessService {
         listofStopsforRoute.push(JSON.parse(JSON.stringify(stopWithMemberAttr)));
       }
     });
-    this.appActions.actUpdateListofStopsforRoute({ relations: listofStopsforRoute   });
+    if (listofStopsforRoute.length > 0) {
+      this.appActions.actUpdateListofStopsforRoute({relations: listofStopsforRoute});
+    }
     this.activateFilteredStopView(true);
     // this.refreshSidebarView('stop');
   }

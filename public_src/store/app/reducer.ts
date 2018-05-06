@@ -100,12 +100,12 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
     case AppActions.ADD_TO_LISTOFSTOPS:
       return {
         ...state,
-        listofStops : [...state.listofStops, action.payload.newStop],
+        listofStops : [...state.listofStops.concat(action.payload.newStops)],
       };
     case AppActions.ADD_TO_LISTOFRELATIONS:
       return {
         ...state,
-        listofRelations : [...state.listofRelations, action.payload.newRelation],
+        listofRelations : [...state.listofRelations.concat(action.payload.newRelations)],
       };
     case AppActions.ADD_TO_LISTOFRELATIONSFORSTOP:
       return {

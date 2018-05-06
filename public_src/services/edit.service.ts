@@ -105,6 +105,7 @@ export class EditService {
    */
   public addChange(element: any, type: string, change: object): any {
     const edits: object[] = this.storageSrv.edits;
+    let listOfRelations: object[] = [];
     const editObj: any = {
       change,
       id: element.id,
@@ -186,7 +187,9 @@ export class EditService {
         console.log('LOG (editing s.) I should add route', editObj);
         if (!this.storageSrv.elementsMap.get(editObj.id)) {
           this.storageSrv.elementsMap.set(editObj.id, editObj.change.to);
-          this.appActions.actAddToListOfRelations({ newRelation: editObj.change.to });
+          listOfRelations.push(editObj.change.to);
+          if (listOfRelations.length > 0) {
+          this.appActions.actAddToListOfRelations({ newRelations: listOfRelations });}
         } else {
           alert(
             'FIXME: this new ROUTE\'s ID already exists ' +
@@ -763,6 +766,7 @@ export class EditService {
    * @param edit - edit object
    */
   private applyChange(edit: any): void {
+    let listOfRoutes: object[] = [];
     if (!edit.id) {
       alert('FIXME: missing edit id ' + JSON.stringify(edit));
     }
@@ -850,7 +854,9 @@ export class EditService {
           edit,
         );
         this.storageSrv.elementsMap.set(edit.id, edit.change.to);
-        this.appActions.actAddToListOfRelations({ newRelation: edit.change.to });
+        listOfRoutes.push(edit.change.to);
+        if (listOfRoutes.length > 0) {
+        this.appActions.actAddToListOfRelations({ newRelations: listOfRoutes });}
         this.processSrv.refreshTagView(
           this.storageSrv.elementsMap.get(edit.id),
         );

@@ -93,20 +93,20 @@ export class AppActions {
   }
   public actAddToListOfStops = (args): Action => {
     console.log('ac add to list of stops');
-    const { newStop } = args;
+    const { newStops } = args;
     return this.ngRedux.dispatch({
       type: AppActions.ADD_TO_LISTOFSTOPS,
       payload : {
-        newStop,
+        newStops,
       },
     });
   }
   public actAddToListOfRelations = (args): Action => {
-    const { newRelation } = args;
+    const { newRelations } = args;
     return this.ngRedux.dispatch({
       type: AppActions.ADD_TO_LISTOFRELATIONS,
       payload : {
-        newRelation,
+        newRelations,
       },
     });
   }
