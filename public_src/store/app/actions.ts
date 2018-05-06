@@ -78,11 +78,11 @@ export class AppActions {
     });
   }
   public actAddtoListofStopsforRoutes = (args): Action => {
-      const {relation} = args;
+      const { relations } = args;
       return this.ngRedux.dispatch({
         type: AppActions.ADD_TO_LISTOFSTOPSFORROUTES,
         payload: {
-          relation,
+          relations,
         },
       });
   }

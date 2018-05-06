@@ -88,7 +88,7 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
     case AppActions.ADD_TO_LISTOFSTOPSFORROUTES:
       return {
         ...state,
-        listOfStopsForRoute : [...state.listOfStopsForRoute, action.payload.relation],
+        listOfStopsForRoute :  action.payload.relations,
    };
     case AppActions.CANCEL_SELECT_ELEMENT:
       return {

@@ -150,5 +150,6 @@ export class StopBrowserComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
     this.selectedObject_subscription.unsubscribe();
     this.listofStops_subscription.unsubscribe();
+    this.listOfStopsForRoute_subscription.unsubscribe();
   }
 }
