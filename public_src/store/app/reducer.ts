@@ -85,7 +85,7 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
             tags: afterRemoveTags,
           },
   };
-    case AppActions.ADD_TO_LISTOFSTOPSFORROUTES:
+    case AppActions.UPDATE_LISTOFSTOPSFORROUTE:
       return {
         ...state,
         listOfStopsForRoute :  action.payload.relations,

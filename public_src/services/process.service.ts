@@ -526,7 +526,7 @@ export class ProcessService {
       return alert('Problem occured - relation is undefined.');
     }
     // this.storageSrv.listOfStopsForRoute.length = 0;
-    let listofStopsforRoutes: object[] = [];
+    let listofStopsforRoute: object[] = [];
     rel.members.forEach((mem) => {
       if (this.storageSrv.elementsMap.has(mem.ref) && mem.type === 'node') {
         const stop = this.getElementById(mem.ref);
@@ -534,10 +534,10 @@ export class ProcessService {
           JSON.parse(JSON.stringify(mem)),
           JSON.parse(JSON.stringify(stop)),
         );
-        listofStopsforRoutes.push(JSON.parse(JSON.stringify(stopWithMemberAttr)));
+        listofStopsforRoute.push(JSON.parse(JSON.stringify(stopWithMemberAttr)));
       }
     });
-    this.appActions.actAddtoListofStopsforRoutes({ relations: listofStopsforRoutes   });
+    this.appActions.actUpdateListofStopsforRoute({ relations: listofStopsforRoute   });
     this.activateFilteredStopView(true);
     // this.refreshSidebarView('stop');
   }

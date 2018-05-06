@@ -17,7 +17,7 @@ export class AppActions {
   static readonly EDIT_TAGVALUE = 'EDIT_TAGVALUE';
   static readonly ADD_TAG = 'ADD_TAG';
   static readonly REMOVE_TAG = 'REMOVE_TAG';
-  static readonly ADD_TO_LISTOFSTOPSFORROUTES = 'ADD_TO_LISTOFSTOPSFORROUTES';
+  static readonly UPDATE_LISTOFSTOPSFORROUTE = 'UPDATE_LISTOFSTOPSFORROUTE';
   static readonly CANCEL_SELECT_ELEMENT = 'CANCEL_SELECT_ELEMENT';
   static readonly ADD_TO_LISTOFSTOPS = 'ADD_TO_LISTOFSTOPS';
   static readonly ADD_TO_LISTOFRELATIONS = 'ADD_TO_LISTOFRELATIONS';
@@ -77,10 +77,10 @@ export class AppActions {
       },
     });
   }
-  public actAddtoListofStopsforRoutes = (args): Action => {
+  public actUpdateListofStopsforRoute = (args): Action => {
       const { relations } = args;
       return this.ngRedux.dispatch({
-        type: AppActions.ADD_TO_LISTOFSTOPSFORROUTES,
+        type: AppActions.UPDATE_LISTOFSTOPSFORROUTE,
         payload: {
           relations,
         },
