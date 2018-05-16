@@ -15,6 +15,7 @@ import { IOverpassResponse } from '../core/overpassResponse.interface';
 
 import { IAppState } from '../store/model';
 import { AppActions } from '../store/app/actions';
+import { DataService } from './data.service';
 
 @Injectable()
 export class ProcessService {
@@ -36,6 +37,8 @@ export class ProcessService {
     private loadSrv: LoadService,
     private mapSrv: MapService,
     private storageSrv: StorageService,
+    private dataservice: DataService,
+
   ) {
     // this.mapSrv.popupBtnClick.subscribe(
     //     (data) => {
@@ -123,6 +126,13 @@ export class ProcessService {
     const responseId = this.getResponseId();
     const transformedGeojson = this.mapSrv.osmtogeojson(response);
     this.storageSrv.localJsonStorage.set(responseId, response);
+    // this.ngf.setItem(responseId.toString(), response).then(function (value) {
+    //   // Do other things once the value has been saved.
+    //   console.log(value);
+    // }).catch((err) => {
+    //   // This code runs if there were any errors
+    //   console.log(err);
+    // });
     this.storageSrv.localGeojsonStorage.set(responseId, transformedGeojson);
     this.createLists(responseId);
     this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
@@ -134,6 +144,7 @@ export class ProcessService {
    * @param response
    */
   public processNodeResponse(response: any): void {
+    console.log('process node response');
     for (const element of response.elements) {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
@@ -142,7 +153,6 @@ export class ProcessService {
         }
         switch (element.type) {
           case 'node':
-            // only nodes are fully downloaded
             this.storageSrv.elementsDownloaded.add(element.id);
 
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
@@ -150,18 +160,105 @@ export class ProcessService {
             }
             break;
           case 'relation':
+
             if (element.tags.public_transport === 'stop_area') {
               this.storageSrv.listOfAreas.push(element);
             } else {
               this.storageSrv.listOfRelations.push(element);
-              break;
             }
         }
       }
     }
     this.storageSrv.logStats();
   }
+  // add different elements (only ways&relations?) of node response to IDB
+  public addNodeResponseToIDB(response:any,id:any): void{
+    console.log('addNodeResponsetoIDB');
+    for (const element of response.elements) {
+      //check if not already included in IDB
+      if ((!this.storageSrv.stopsIndexedDb.has(element.id)) &&
+        (!this.storageSrv.waysIndexedDb.has(element.id))
+        && (!this.storageSrv.routeMastersIndexedDb.has(element.id)) &&
+        (!this.storageSrv.routesIndexedDb.has(element.id))
+      ) {
+        console.log("not already in idb");
+        switch (element.type) {
+          case 'node':
+            console.log('reponse has a node');
+            if (element.tags.bus === 'yes' || element.tags.public_transport) {
+              this.dataservice.addStop(element)
+                .then(() => {
+                  console.log('(Process s.) Added a node with' + element.id +  'to stopsIndexedDb of storage service'
+                    + 'for feauture id' + id);
+                  this.storageSrv.stopsIndexedDb.add(element.id);
+                  console.log('success');
 
+                }).catch((err) => {
+                console.log('error' + err);
+              });
+
+            }
+            break;
+          case 'relation':
+            console.log('response has relation');
+
+            if (element.tags.type === 'route') {
+              console.log('response has relation :route');
+
+              this.dataservice.addRoute(element)
+                .then(() => {
+                  console.log('(Process s.) Added a route with' + element.id +
+                    'to routesIndexedDb of storage service'
+                    + 'for feauture id' + id);
+
+                  this.storageSrv.routesIndexedDb.add(element.id);
+                  console.log('success');
+
+                }).catch((err) => {
+                console.log('error' + err);
+              });
+            }
+            if (element.tags.type === 'route_master') {
+              console.log('reponse has relation :route master');
+
+              this.dataservice.addRouteMaster(element)
+                .then(() => {
+                  console.log('(Process s.) Added a route_master with' + element.id +
+                    'to routeMastersIndexedDb of storage service'
+                    + 'for feauture id' + id);
+
+                  this.storageSrv.routeMastersIndexedDb.add(element.id);
+                  console.log('success');
+
+                }).catch((err) => {
+                console.log('error' + err);
+              });
+            }
+            console.log('process node response, relation');
+            break;
+          case 'way':
+            console.log('reponse has way');
+
+            this.dataservice.addWay(element)
+              .then(() => {
+                console.log('(Process s.) Added a way with' + element.id +
+                  'to waysIndexedDb of storage service'
+                  + 'for feature id' + id);
+                this.storageSrv.waysIndexedDb.add(element.id);
+                console.log('success');
+
+              }).catch((err) => {
+              console.log('error' + err);
+            });
+            break;
+          default:
+            console.log('default');
+        }
+      }else{
+        console.log("none");
+      }
+  }
+  }
   /**
    * Adds hash to URL hostname similarly like it is used on OSM (/#map=19/49.83933/18.29230)
    */
@@ -616,4 +713,5 @@ export class ProcessService {
   public numIsBetween(num: number, min: number, max: number): boolean {
     return min < num && num < max;
   }
+
 }

@@ -17,6 +17,8 @@ import { ToolbarComponent } from '../toolbar/toolbar.component';
 
 import { IAppState } from '../../store/model';
 import { AppActions } from '../../store/app/actions';
+import { DataService } from '../../services/data.service';
+import { StorageService } from '../../services/storage.service';
 
 @Component({
   providers: [{ provide: CarouselConfig, useValue: { noPause: false } }],
@@ -43,6 +45,8 @@ export class AppComponent {
     private loadSrv: LoadService,
     private mapSrv: MapService,
     private processSrv: ProcessService,
+    private dataSrv: DataService,
+    private storageSrv: StorageService,
   ) {
     if (isDevMode()) {
       console.log('WARNING: Ang. development mode is ', isDevMode());
@@ -50,6 +54,23 @@ export class AppComponent {
   }
 
   public ngOnInit(): any {
+
+    this.dataSrv.db.Routes.orderBy('id').keys((keys) => {
+      let routeSet = new Set(keys.map((item) => item));
+      this.storageSrv.routesIndexedDb = routeSet;
+    });
+    this.dataSrv.db.RouteMasters.orderBy('id').keys((keys) => {
+      let routemastersSet = new Set(keys.map((item) => item));
+      this.storageSrv.routeMastersIndexedDb = routemastersSet;
+    });
+    this.dataSrv.db.Ways.orderBy('id').keys((keys) => {
+      let waysSet = new Set(keys.map((item) => item));
+      this.storageSrv.waysIndexedDb = waysSet;
+    });
+    this.dataSrv.db.Stops.orderBy('id').keys((keys) => {
+      let stopsSet = new Set(keys.map((item) => item));
+      this.storageSrv.stopsIndexedDb = stopsSet;
+    });
     const map = L.map('map', {
       center: L.latLng(49.686, 18.351),
       layers: [this.mapSrv.baseMaps.CartoDB_light],

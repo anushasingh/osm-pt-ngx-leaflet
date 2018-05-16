@@ -7,6 +7,7 @@ import { LoadService } from './load.service';
 import { MapService } from './map.service';
 import { ProcessService } from './process.service';
 import { StorageService } from './storage.service';
+import { DataService } from './data.service';
 
 import { create } from 'xmlbuilder';
 
@@ -25,13 +26,32 @@ export class OverpassService {
     private processSrv: ProcessService,
     private storageSrv: StorageService,
     private mapSrv: MapService,
+    private dataservice: DataService,
   ) {
     /**
      * @param data - string containing ID of clicked marker
      */
     this.mapSrv.markerClick.subscribe((data) => {
       const featureId = Number(data);
+      // means that node was fully downloaded (all the routes relation & ways of which it is  a part of)
+      // if ((this.storageSrv.stopsIndexedDb.has(featureId))) {
+      //   this.dataservice.getStop(featureId.toString())
+      //     .then((stop) => {
+      //       console.log('got a stop from idb');
+      //       this.processSrv.exploreStop(
+      //             stop,
+      //             false,
+      //             false,
+      //             false,
+      //           );
+      //       console.log('success');
+      //
+      //     }).catch((err) => {
+      //     console.log('error' + err);
+      //   });
+      // }
 
+     // checks the storage service's elementsmap
       if (this.storageSrv.elementsMap.has(featureId)) {
         this.processSrv.exploreStop(
           this.storageSrv.elementsMap.get(featureId),
@@ -41,14 +61,25 @@ export class OverpassService {
         );
       }
 
+      console.log('(overpass s.) check if element is already downloaded ' +
+        this.storageSrv.stopsIndexedDb.has(featureId));
+
       if (
         !this.storageSrv.elementsDownloaded.has(featureId) &&
         featureId > 0
-      ) {
+      ){
         console.log('LOG (overpass s.) Requesting started for ', featureId);
-        this.getNodeData(featureId);
+        this.getNodeData(featureId, true);
         this.storageSrv.elementsDownloaded.add(featureId);
         console.log('LOG (overpass s.) Requesting finished for', featureId);
+      }
+      console.log('get a random key from elements map');
+      let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
+      console.log('random key generated is' + randomkey);
+      if (!this.storageSrv.cDownloadedStops.has(randomkey)) {
+        console.log('LOG (overpass s.) Requesting started for in the background ', randomkey);
+        this.getNodeData(randomkey,false);
+        console.log('LOG (overpass s.) Requesting finished for in the background ', randomkey);
       }
     });
 
@@ -213,7 +244,7 @@ export class OverpassService {
    * Downloads all data for currently selected node.
    * @param featureId
    */
-  private getNodeData(featureId: number): void {
+  private getNodeData(featureId: number,process: boolean): void {
     let requestBody = `
       [out:json][timeout:25];
       (
@@ -238,10 +269,17 @@ export class OverpassService {
             return alert('No response from API. Try to select element again please.');
           }
           console.log('LOG (overpass s.)', res);
-          this.processSrv.processNodeResponse(res);
-          this.loadSrv.hide();
-          this.getRouteMasters(10);
-          // TODO this.processSrv.drawStopAreas();
+          if (process) {
+            //process add to listofstops,litsofrelations
+            this.processSrv.processNodeResponse(res);
+            this.loadSrv.hide();
+            this.getRouteMasters(10);
+          }
+            // add to IDB
+          if(!this.storageSrv.cDownloadedStops.has(featureId)){
+            console.log('add started for' + featureId);
+            this.processSrv.addNodeResponseToIDB(res, featureId);
+            this.storageSrv.cDownloadedStops.add(featureId);}
         },
         (err) => {
           throw new Error(err);
@@ -594,4 +632,10 @@ export class OverpassService {
       2500,
     );
   }
+
+  public getRandomKey(collection: any): any {
+    let keys = Array.from(collection.keys());
+    return keys[Math.floor(Math.random() * keys.length)];
+  }
+
 }

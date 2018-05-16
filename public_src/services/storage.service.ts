@@ -39,6 +39,14 @@ export class StorageService {
   public edits: object[] = [];
   public editsChanged: EventEmitter<boolean> = new EventEmitter();
   public stats: EventEmitter<object> = new EventEmitter();
+  public stopsIndexedDb = new Set();
+  //ids of elements already in idb
+  public platformsIndexedDb = new Set();
+  public routesIndexedDb = new Set();
+  public routeMastersIndexedDb = new Set();
+  public waysIndexedDb = new Set();
+  public cDownloadedStops = new Set();
+
 
   constructor() {
     this.currentElementsChange.subscribe((data) => {
