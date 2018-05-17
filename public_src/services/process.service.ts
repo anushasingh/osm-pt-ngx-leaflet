@@ -175,7 +175,7 @@ export class ProcessService {
   public addNodeResponseToIDB(response:any,id:any): void{
     console.log('addNodeResponsetoIDB');
     for (const element of response.elements) {
-      //check if not already included in IDB
+      // check if not already included in IDB
       if ((!this.storageSrv.stopsIndexedDb.has(element.id)) &&
         (!this.storageSrv.waysIndexedDb.has(element.id))
         && (!this.storageSrv.routeMastersIndexedDb.has(element.id)) &&
@@ -186,7 +186,9 @@ export class ProcessService {
           case 'node':
             console.log('reponse has a node');
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
-              this.dataservice.addStop(element)
+              let newelement = element;
+              newelement['routes'] = [];
+              this.dataservice.addStop(newelement)
                 .then(() => {
                   console.log('(Process s.) Added a node with' + element.id +  'to stopsIndexedDb of storage service'
                     + 'for feauture id' + id);
@@ -204,8 +206,26 @@ export class ProcessService {
 
             if (element.tags.type === 'route') {
               console.log('response has relation :route');
+              let nodeMembers = [];
+              let wayMembers = [];
+              for (let item of element['members']) {
+                if (item.type === 'node') {
+                  nodeMembers.push(item.ref);
+                }
+                if (item.type === 'way') {
+                  wayMembers.push(item.ref);
+                }
 
-              this.dataservice.addRoute(element)
+              }
+              let newelement:any = {};
+              for (let key in element){
+                if (element.hasOwnProperty(key) && key !== 'members') {
+                  newelement[key] = element[key];
+                }
+              }
+              newelement['nodemembers'] = nodeMembers;
+              newelement['waymembers'] = wayMembers;
+              this.dataservice.addRoute(newelement)
                 .then(() => {
                   console.log('(Process s.) Added a route with' + element.id +
                     'to routesIndexedDb of storage service'
@@ -217,7 +237,15 @@ export class ProcessService {
                 }).catch((err) => {
                 console.log('error' + err);
               });
+              this.dataservice.addtoroutes(id, element.id).then(() => {
+                console.log('success' + id + element.id);
+              }).catch((err) => {
+                console.log('not able to add');
+                console.log(err);
+              });
+
             }
+            // below not needed, as stops will never be a part of route_masters?
             if (element.tags.type === 'route_master') {
               console.log('reponse has relation :route master');
 

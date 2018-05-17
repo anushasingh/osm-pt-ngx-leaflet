@@ -1,21 +1,23 @@
 import Dexie from 'dexie';
-import { IPtStop } from '../core/ptStop.interface';
-import { IPtRelationNew } from '../core/ptRelationNew.interface';
+import { IPtStopDB } from '../core/ptStopDB.interface';
+import { IPtRelationDB } from '../core/ptRelationDB.interface';
 import { IPtRouteMasterNew } from '../core/ptRouteMasterNew.interface';
 import { IPtWay } from '../core/ptWay.interface';
 
 export class Db extends Dexie {
-  Stops: Dexie.Table<IPtStop, string>;
-  Routes: Dexie.Table<IPtRelationNew, string>;
+  Stops: Dexie.Table<IPtStopDB, string>;
+  Routes: Dexie.Table<IPtRelationDB, string>;
   RouteMasters: Dexie.Table<IPtRouteMasterNew, string>;
   Ways: Dexie.Table<IPtWay, string>;
+  // StopsandRoutes: Dexie.Table<number, string>;
   constructor() {
     super('Database');
     this.version(1).stores({
-      Stops: 'id,type',
-      Routes: 'id',
+      Stops: 'id',
+      Routes: 'id,*stopmembers',
       RouteMasters: 'id',
       Ways: 'id',
+      // StopsandRroutes:
     });
   }
 }

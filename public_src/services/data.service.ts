@@ -1,6 +1,6 @@
 import { Db } from './dexiedb';
-import { IPtStop } from '../core/ptStop.interface';
-import { IPtRelationNew } from '../core/ptRelationNew.interface';
+import { IPtStopDB } from '../core/ptStopDB.interface';
+import { IPtRelationDB } from '../core/ptRelationDB.interface';
 import { IPtRouteMasterNew } from '../core/ptRouteMasterNew.interface';
 import { IPtWay } from '../core/ptWay.interface';
 export class DataService {
@@ -10,15 +10,17 @@ export class DataService {
   constructor() {
     this.db = new Db();
   }
-  addStop(data: IPtStop): any {
 
-   return this.db.transaction('rw', this.db.Stops, () => {
-     return this.db.Stops.add(data).then((lastKey) => {
+  addStop(data: IPtStopDB): any {
+
+    return this.db.transaction('rw', this.db.Stops, () => {
+      return this.db.Stops.add(data).then((lastKey) => {
         console.log('(data s.) Added stop to idb');
+      });
     });
-  });
   }
-  addRoute(data: IPtRelationNew): any {
+
+  addRoute(data: IPtRelationDB): any {
 
     return this.db.transaction('rw', this.db.Routes, () => {
       return this.db.Routes.add(data).then((lastKey) => {
@@ -26,6 +28,7 @@ export class DataService {
       });
     });
   }
+
   addWay(data: IPtWay): any {
 
     return this.db.transaction('rw', this.db.Ways, () => {
@@ -34,6 +37,7 @@ export class DataService {
       });
     });
   }
+
   addRouteMaster(data: IPtRouteMasterNew): any {
 
     return this.db.transaction('rw', this.db.RouteMasters, () => {
@@ -42,12 +46,59 @@ export class DataService {
       });
     });
   }
-  getStop(id: string): any{
+
+  getStop(id: number): any {
     return this.db.transaction('r', this.db.Stops, () => {
-      return this.db.Stops.get(id,(stop) => {
-        console.log('(data s.) got stop from idb');
-        console.log(stop);
+      console.log(id);
+      return this.db.Stops.get({id: id}).then ((firstFriend) => {
+        console.log("Friend with id 1: " + firstFriend.id);
+        return firstFriend;
       });
     });
   }
+
+  // addStopsRouteTable(stopid: number, routeid: number){
+  //
+  // }
+
+  // getRoutesforStop(): any{
+  //   return this.db.Routes.where();
+  //
+  // }
+
+  //add to relations of a stop
+  addtoroutes(stopid: number, routeid: number): any {
+
+    return this.db.transaction('rw', this.db.Stops, () => {
+      return this.db.Stops.where('id').equals(stopid).modify((x) => {
+        console.log('heyyyyyyyyyyyyyyyyyyyy');
+        console.log(x);
+        x.routes.push(routeid);
+        console.log('this is x');
+        console.log(x);
+      });
+    });
+
+  }
+
+  getwholenoderesponse(stopid: number): any{
+
+    return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
+      return this.db.Stops.get({id: stopid}).then((stop) => {
+       let arrayofroutes = stop.routes;
+        let filteredroutes = [];
+
+      this.db.Routes.each((route) => {
+          if (arrayofroutes.includes(route.id)) {
+            // return route;
+          }
+          return Promise.resolve(route);
+        }););
+
+      });
+    });
+  }
+
 }
+
+

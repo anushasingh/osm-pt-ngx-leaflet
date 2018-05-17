@@ -63,7 +63,11 @@ export class OverpassService {
 
       console.log('(overpass s.) check if element is already downloaded ' +
         this.storageSrv.stopsIndexedDb.has(featureId));
-
+      if(this.storageSrv.cDownloadedStops.has(featureId)){
+        // getNodeDataIDB(featureId);
+      }else{
+        //overpass query then process,add to idb
+      }
       if (
         !this.storageSrv.elementsDownloaded.has(featureId) &&
         featureId > 0
@@ -275,6 +279,8 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
+          console.log('list of c downloaded ');
+          console.log(this.storageSrv.cDownloadedStops);
             // add to IDB
           if(!this.storageSrv.cDownloadedStops.has(featureId)){
             console.log('add started for' + featureId);
@@ -637,5 +643,41 @@ export class OverpassService {
     let keys = Array.from(collection.keys());
     return keys[Math.floor(Math.random() * keys.length)];
   }
-
-}
+//   public getNodeDataIDB(id:number):any{
+//    //push listofstops
+//     //push to listofrelations
+//     console.log('get node data idb');
+//     //getthatstopelement
+//     //getallrelationsfromthatstop
+//
+//
+//
+//     //for whole response
+//     for (const element of response.elements) {
+//       if (!this.storageSrv.elementsMap.has(element.id)) {
+//         this.storageSrv.elementsMap.set(element.id, element);
+//         if (!element.tags) {
+//           continue;
+//         }
+//         switch (element.type) {
+//           case 'node':
+//             this.storageSrv.elementsDownloaded.add(element.id);
+//
+//             if (element.tags.bus === 'yes' || element.tags.public_transport) {
+//               this.storageSrv.listOfStops.push(element);
+//             }
+//             break;
+//           case 'relation':
+//
+//             if (element.tags.public_transport === 'stop_area') {
+//               this.storageSrv.listOfAreas.push(element);
+//             } else {
+//               this.storageSrv.listOfRelations.push(element);
+//             }
+//         }
+//       }
+//     }
+//     this.storageSrv.logStats();
+//
+//   }
+ }
