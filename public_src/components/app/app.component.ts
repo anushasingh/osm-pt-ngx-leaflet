@@ -64,7 +64,7 @@ export class AppComponent {
     //   console.log('error' + err);
     // });
     //
-    this.dataSrv.getwholenoderesponse(2159530366)
+    this.dataSrv.getRoutesforNode(2159530366)
       .then((res) => {
 
         console.log('success');

@@ -47,15 +47,15 @@ export class DataService {
     });
   }
 
-  getStop(id: number): any {
-    return this.db.transaction('r', this.db.Stops, () => {
-      console.log(id);
-      return this.db.Stops.get({id: id}).then ((firstFriend) => {
-        console.log("Friend with id 1: " + firstFriend.id);
-        return firstFriend;
-      });
-    });
-  }
+  // getStop(id: number): any {
+  //   return this.db.transaction('r', this.db.Stops, () => {
+  //     console.log(id);
+  //     return this.db.Stops.get({id: id}).then ((firstFriend) => {
+  //       console.log("Friend with id 1: " + firstFriend.id);
+  //       return firstFriend;
+  //     });
+  //   });
+  // }
 
   // addStopsRouteTable(stopid: number, routeid: number){
   //
@@ -87,27 +87,19 @@ export class DataService {
     });
   }
 
-
-
-  getwholenoderesponse(stopid: number): any{
+   // gets route relations for a given node id
+  getRoutesforNode(stopid: number): any {
 
     return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
-      return this.db.Stops.get({id: stopid}).then((stop) => {
-       let arrayofroutes = stop.routes;
-       console.log('this is stop');
-       console.log(stop);
-       console.log('this is arrayofroutes');
-       console.log(arrayofroutes);
+      return this.db.Stops.get({ id: stopid }).then((stop) => {
+       let arrayofroutes = stop.routes; // contains only ids
        let filteredroutes = [];
-       this.db.Routes.each((route) => {
+       return this.db.Routes.each((route) => {
           if (arrayofroutes.includes(route.id)) {
-            filteredroutes.push(route);
-          }
+             filteredroutes.push(route);}
         }).then(() => {
-          console.log(filteredroutes);
           return Promise.resolve(filteredroutes);
         });
-
       });
     });
   }

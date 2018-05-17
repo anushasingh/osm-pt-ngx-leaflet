@@ -32,27 +32,10 @@ export class OverpassService {
      * @param data - string containing ID of clicked marker
      */
     this.mapSrv.markerClick.subscribe((data) => {
+      console.log('(Overpass s.)marker is clicked');
       const featureId = Number(data);
-      // means that node was fully downloaded (all the routes relation & ways of which it is  a part of)
-      // if ((this.storageSrv.stopsIndexedDb.has(featureId))) {
-      //   this.dataservice.getStop(featureId.toString())
-      //     .then((stop) => {
-      //       console.log('got a stop from idb');
-      //       this.processSrv.exploreStop(
-      //             stop,
-      //             false,
-      //             false,
-      //             false,
-      //           );
-      //       console.log('success');
-      //
-      //     }).catch((err) => {
-      //     console.log('error' + err);
-      //   });
-      // }
-
-     // checks the storage service's elementsmap
       if (this.storageSrv.elementsMap.has(featureId)) {
+        //highlights marker on map with a circle
         this.processSrv.exploreStop(
           this.storageSrv.elementsMap.get(featureId),
           false,
@@ -60,27 +43,29 @@ export class OverpassService {
           false,
         );
       }
-
-      console.log('(overpass s.) check if element is already downloaded ' +
-        this.storageSrv.stopsIndexedDb.has(featureId));
-      if(this.storageSrv.cDownloadedStops.has(featureId)){
-        // getNodeDataIDB(featureId);
+      if(this.storageSrv.DownloadedNodes.has(featureId)){
+        console.log('Already downloaded , hence data fetched for IDB')
+        //case when all data for the node was downloaded earlier and stored in IDB
+        //gets node data from IDB and updates values such as listofstops,listofrelations
+        this.getNodeDataIDB(featureId);
       }else{
+        if (
+          !this.storageSrv.elementsDownloaded.has(featureId) &&
+          featureId > 0
+        ){
+          console.log('Not Already downloaded , hence data fetched for overpass')
+
+          console.log('LOG (overpass s.) Requesting started for ', featureId);
+          this.getNodeData(featureId, true);
+          this.storageSrv.elementsDownloaded.add(featureId);
+          console.log('LOG (overpass s.) Requesting finished for', featureId);
+        }
         //overpass query then process,add to idb
-      }
-      if (
-        !this.storageSrv.elementsDownloaded.has(featureId) &&
-        featureId > 0
-      ){
-        console.log('LOG (overpass s.) Requesting started for ', featureId);
-        this.getNodeData(featureId, true);
-        this.storageSrv.elementsDownloaded.add(featureId);
-        console.log('LOG (overpass s.) Requesting finished for', featureId);
       }
       console.log('get a random key from elements map');
       let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
       console.log('random key generated is' + randomkey);
-      if (!this.storageSrv.cDownloadedStops.has(randomkey)) {
+      if (!this.storageSrv.DownloadedNodes.has(randomkey)) {
         console.log('LOG (overpass s.) Requesting started for in the background ', randomkey);
         this.getNodeData(randomkey,false);
         console.log('LOG (overpass s.) Requesting finished for in the background ', randomkey);
@@ -280,12 +265,12 @@ export class OverpassService {
             this.getRouteMasters(10);
           }
           console.log('list of c downloaded ');
-          console.log(this.storageSrv.cDownloadedStops);
+          console.log(this.storageSrv.DownloadedNodes);
             // add to IDB
-          if(!this.storageSrv.cDownloadedStops.has(featureId)){
+          if(!this.storageSrv.DownloadedNodes.has(featureId)){
             console.log('add started for' + featureId);
             this.processSrv.addNodeResponseToIDB(res, featureId);
-            this.storageSrv.cDownloadedStops.add(featureId);}
+            this.storageSrv.DownloadedNodes.add(featureId);}
         },
         (err) => {
           throw new Error(err);
@@ -643,41 +628,31 @@ export class OverpassService {
     let keys = Array.from(collection.keys());
     return keys[Math.floor(Math.random() * keys.length)];
   }
-//   public getNodeDataIDB(id:number):any{
-//    //push listofstops
-//     //push to listofrelations
-//     console.log('get node data idb');
-//     //getthatstopelement
-//     //getallrelationsfromthatstop
-//
-//
-//
-//     //for whole response
-//     for (const element of response.elements) {
-//       if (!this.storageSrv.elementsMap.has(element.id)) {
-//         this.storageSrv.elementsMap.set(element.id, element);
-//         if (!element.tags) {
-//           continue;
-//         }
-//         switch (element.type) {
-//           case 'node':
-//             this.storageSrv.elementsDownloaded.add(element.id);
-//
-//             if (element.tags.bus === 'yes' || element.tags.public_transport) {
-//               this.storageSrv.listOfStops.push(element);
-//             }
-//             break;
-//           case 'relation':
-//
-//             if (element.tags.public_transport === 'stop_area') {
-//               this.storageSrv.listOfAreas.push(element);
-//             } else {
-//               this.storageSrv.listOfRelations.push(element);
-//             }
-//         }
-//       }
-//     }
-//     this.storageSrv.logStats();
-//
-//   }
+  public getNodeDataIDB(id:number):any {
+    //push listofstops
+    //push to listofrelations
+    console.log('get node data idb');
+    //getthatstopelement
+    //getallrelationsfromthatstop
+    this.dataservice.getRoutesforNode(id).then((relations: Array<object>[]) => {
+      for (let i =0; i< relations.length;i++) {
+        if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
+          this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
+          if (!relations[i]['tags']) {
+            continue;
+          }
+
+          if (relations[i]['tags']['public_transport'] === 'stop_area') {
+            this.storageSrv.listOfAreas.push(relations[i]);
+          } else {
+            this.storageSrv.listOfRelations.push(relations[i]);
+          }
+        }
+        this.storageSrv.logStats();
+      }
+    }).catch((err) => {
+      console.log(err);
+    });
+  }
+
  }

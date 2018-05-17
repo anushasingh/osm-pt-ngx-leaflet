@@ -45,7 +45,8 @@ export class StorageService {
   public routesIndexedDb = new Set();
   public routeMastersIndexedDb = new Set();
   public waysIndexedDb = new Set();
-  public cDownloadedStops = new Set();
+  //stops/platforms for which all data has been dwnloaded and added to IDB
+  public DownloadedNodes = new Set();
 
 
   constructor() {
