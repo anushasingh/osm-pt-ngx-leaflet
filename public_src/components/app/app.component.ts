@@ -54,32 +54,6 @@ export class AppComponent {
   }
 
   public ngOnInit(): any {
-    // let id = 2184049214;
-    // this.dataSrv.getRoutesforStop()
-    //   .then((res) => {
-    //     console.log('get route for stops');
-    //     console.log('success');
-    //     console.log(res);
-    //   }).catch((err) => {
-    //   console.log('error' + err);
-    // });
-    //
-    this.dataSrv.getRoutesforNode(2159530366)
-      .then((res) => {
-
-        console.log('success');
-        console.log(res);
-      }).catch((err) => {
-      console.log('error' + err);
-    });
-
-    // this.dataSrv.getStop(2159558797).then((res) => {
-    //
-
-    //   console.log(res);
-    // }).catch((err) => {
-    //   console.log(err);
-    // });
 
     this.dataSrv.db.Routes.orderBy('id').keys((keys) => {
       let routeSet = new Set(keys.map((item) => item));

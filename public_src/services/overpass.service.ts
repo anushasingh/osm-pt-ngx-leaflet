@@ -13,7 +13,8 @@ import { create } from 'xmlbuilder';
 
 import { IOverpassResponse } from '../core/overpassResponse.interface';
 import { Utils } from '../core/utils.class';
-
+import { NgRedux } from '@angular-redux/store';
+import { IAppState } from '../store/model';
 @Injectable()
 export class OverpassService {
   public changeset;
@@ -27,11 +28,13 @@ export class OverpassService {
     private storageSrv: StorageService,
     private mapSrv: MapService,
     private dataservice: DataService,
+    private ngRedux: NgRedux<IAppState>,
   ) {
     /**
      * @param data - string containing ID of clicked marker
      */
     this.mapSrv.markerClick.subscribe((data) => {
+      let goodConnectionMode = ngRedux.getState()['app']['goodConnectMode']
       console.log('(Overpass s.)marker is clicked');
       const featureId = Number(data);
       if (this.storageSrv.elementsMap.has(featureId)) {
@@ -62,6 +65,8 @@ export class OverpassService {
         }
         //overpass query then process,add to idb
       }
+      if(!goodConnectionMode){
+      //download nearby few nodes
       console.log('get a random key from elements map');
       let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
       console.log('random key generated is' + randomkey);
@@ -69,8 +74,11 @@ export class OverpassService {
         console.log('LOG (overpass s.) Requesting started for in the background ', randomkey);
         this.getNodeData(randomkey,false);
         console.log('LOG (overpass s.) Requesting finished for in the background ', randomkey);
-      }
-    });
+      }    else{
+      //download nearby many nodes
+        } }
+      });
+
 
     /**
      * Handles downloading of missing relation members (nodes, ways).
@@ -628,14 +636,14 @@ export class OverpassService {
     let keys = Array.from(collection.keys());
     return keys[Math.floor(Math.random() * keys.length)];
   }
+  public getRandomKey2 (collection: Map<any, any>): any{
+    let length = collection.size;
+
+  }
   public getNodeDataIDB(id:number):any {
-    //push listofstops
-    //push to listofrelations
     console.log('get node data idb');
-    //getthatstopelement
-    //getallrelationsfromthatstop
     this.dataservice.getRoutesforNode(id).then((relations: Array<object>[]) => {
-      for (let i =0; i< relations.length;i++) {
+      for (let i = 0; i < relations.length;i++) {
         if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
           this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
           if (!relations[i]['tags']) {
