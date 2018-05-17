@@ -71,7 +71,6 @@ export class DataService {
 
     return this.db.transaction('rw', this.db.Stops, () => {
       return this.db.Stops.where('id').equals(stopid).modify((x) => {
-        console.log('heyyyyyyyyyyyyyyyyyyyy');
         console.log(x);
         x.routes.push(routeid);
         console.log('this is x');
@@ -81,19 +80,33 @@ export class DataService {
 
   }
 
+  tempfunction(): any{
+    return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
+
+
+    });
+  }
+
+
+
   getwholenoderesponse(stopid: number): any{
 
     return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
       return this.db.Stops.get({id: stopid}).then((stop) => {
        let arrayofroutes = stop.routes;
-        let filteredroutes = [];
-
-      this.db.Routes.each((route) => {
+       console.log('this is stop');
+       console.log(stop);
+       console.log('this is arrayofroutes');
+       console.log(arrayofroutes);
+       let filteredroutes = [];
+       this.db.Routes.each((route) => {
           if (arrayofroutes.includes(route.id)) {
-            // return route;
+            filteredroutes.push(route);
           }
-          return Promise.resolve(route);
-        }););
+        }).then(() => {
+          console.log(filteredroutes);
+          return Promise.resolve(filteredroutes);
+        });
 
       });
     });

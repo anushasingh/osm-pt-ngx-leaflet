@@ -64,18 +64,18 @@ export class AppComponent {
     //   console.log('error' + err);
     // });
     //
-    // this.dataSrv.getwholenoderesponse(2155640061)
-    //   .then((res) => {
-    //
-    //     console.log('success');
-    //     console.log(res);
-    //   }).catch((err) => {
-    //   console.log('error' + err);
-    // });
+    this.dataSrv.getwholenoderesponse(2159530366)
+      .then((res) => {
+
+        console.log('success');
+        console.log(res);
+      }).catch((err) => {
+      console.log('error' + err);
+    });
 
     // this.dataSrv.getStop(2159558797).then((res) => {
     //
-    /
+
     //   console.log(res);
     // }).catch((err) => {
     //   console.log(err);
