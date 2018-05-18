@@ -126,13 +126,6 @@ export class ProcessService {
     const responseId = this.getResponseId();
     const transformedGeojson = this.mapSrv.osmtogeojson(response);
     this.storageSrv.localJsonStorage.set(responseId, response);
-    // this.ngf.setItem(responseId.toString(), response).then(function (value) {
-    //   // Do other things once the value has been saved.
-    //   console.log(value);
-    // }).catch((err) => {
-    //   // This code runs if there were any errors
-    //   console.log(err);
-    // });
     this.storageSrv.localGeojsonStorage.set(responseId, transformedGeojson);
     this.createLists(responseId);
     this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
@@ -144,7 +137,6 @@ export class ProcessService {
    * @param response
    */
   public processNodeResponse(response: any): void {
-    console.log('process node response');
     for (const element of response.elements) {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
@@ -154,7 +146,6 @@ export class ProcessService {
         switch (element.type) {
           case 'node':
             this.storageSrv.elementsDownloaded.add(element.id);
-
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
               this.storageSrv.listOfStops.push(element);
             }
@@ -172,29 +163,21 @@ export class ProcessService {
     this.storageSrv.logStats();
   }
   // add different elements (only ways&relations?) of node response to IDB
-  public addNodeResponseToIDB(response:any,id:any): void{
-    console.log('addNodeResponsetoIDB');
+  public addNodeResponseToIDB(response: any,id: any): void{
     for (const element of response.elements) {
-      // check if not already included in IDB
       if ((!this.storageSrv.stopsIndexedDb.has(element.id)) &&
         (!this.storageSrv.waysIndexedDb.has(element.id))
         && (!this.storageSrv.routeMastersIndexedDb.has(element.id)) &&
         (!this.storageSrv.routesIndexedDb.has(element.id))
       ) {
-        console.log("not already in idb");
         switch (element.type) {
           case 'node':
-            console.log('reponse has a node');
             if (element.tags.bus === 'yes' || element.tags.public_transport) {
               let newelement = element;
               newelement['routes'] = [];
               this.dataservice.addStop(newelement)
                 .then(() => {
-                  console.log('(Process s.) Added a node with' + element.id +  'to stopsIndexedDb of storage service'
-                    + 'for feauture id' + id);
                   this.storageSrv.stopsIndexedDb.add(element.id);
-                  console.log('success');
-
                 }).catch((err) => {
                 console.log('error' + err);
               });
@@ -202,10 +185,7 @@ export class ProcessService {
             }
             break;
           case 'relation':
-            console.log('response has relation');
-
             if (element.tags.type === 'route') {
-              console.log('response has relation :route');
               let nodeMembers = [];
               let wayMembers = [];
               for (let item of element['members']) {
@@ -227,63 +207,35 @@ export class ProcessService {
               newelement['waymembers'] = wayMembers;
               this.dataservice.addRoute(newelement)
                 .then(() => {
-                  console.log('(Process s.) Added a route with' + element.id +
-                    'to routesIndexedDb of storage service'
-                    + 'for feauture id' + id);
-
                   this.storageSrv.routesIndexedDb.add(element.id);
-                  console.log('success');
-
                 }).catch((err) => {
                 console.log('error' + err);
               });
               this.dataservice.addtoroutes(id, element.id).then(() => {
-                console.log('success' + id + element.id);
               }).catch((err) => {
-                console.log('not able to add');
                 console.log(err);
               });
 
             }
             // below not needed, as stops will never be a part of route_masters?
             if (element.tags.type === 'route_master') {
-              console.log('reponse has relation :route master');
-
               this.dataservice.addRouteMaster(element)
                 .then(() => {
-                  console.log('(Process s.) Added a route_master with' + element.id +
-                    'to routeMastersIndexedDb of storage service'
-                    + 'for feauture id' + id);
-
                   this.storageSrv.routeMastersIndexedDb.add(element.id);
-                  console.log('success');
-
                 }).catch((err) => {
                 console.log('error' + err);
               });
             }
-            console.log('process node response, relation');
             break;
           case 'way':
-            console.log('reponse has way');
-
             this.dataservice.addWay(element)
               .then(() => {
-                console.log('(Process s.) Added a way with' + element.id +
-                  'to waysIndexedDb of storage service'
-                  + 'for feature id' + id);
                 this.storageSrv.waysIndexedDb.add(element.id);
-                console.log('success');
-
               }).catch((err) => {
               console.log('error' + err);
             });
             break;
-          default:
-            console.log('default');
         }
-      }else{
-        console.log("none");
       }
   }
   }
@@ -339,7 +291,6 @@ export class ProcessService {
     response.elements.forEach((element) => {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
-
         switch (element.type) {
           case 'node':
             // this.storageSrv.elementsDownloaded.add(element.id);

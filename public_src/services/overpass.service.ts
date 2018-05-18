@@ -34,11 +34,9 @@ export class OverpassService {
      * @param data - string containing ID of clicked marker
      */
     this.mapSrv.markerClick.subscribe((data) => {
-      let goodConnectionMode = ngRedux.getState()['app']['goodConnectMode']
-      console.log('(Overpass s.)marker is clicked');
+      let goodConnectionMode = ngRedux.getState()['app']['goodConnectMode'];
       const featureId = Number(data);
       if (this.storageSrv.elementsMap.has(featureId)) {
-        //highlights marker on map with a circle
         this.processSrv.exploreStop(
           this.storageSrv.elementsMap.get(featureId),
           false,
@@ -46,40 +44,33 @@ export class OverpassService {
           false,
         );
       }
-      if(this.storageSrv.DownloadedNodes.has(featureId)){
-        console.log('Already downloaded , hence data fetched for IDB')
-        //case when all data for the node was downloaded earlier and stored in IDB
-        //gets node data from IDB and updates values such as listofstops,listofrelations
+      if (this.storageSrv.DownloadedNodes.has(featureId)) {
         this.getNodeDataIDB(featureId);
-      }else{
+      } else {
         if (
           !this.storageSrv.elementsDownloaded.has(featureId) &&
           featureId > 0
-        ){
-          console.log('Not Already downloaded , hence data fetched for overpass')
-
-          console.log('LOG (overpass s.) Requesting started for ', featureId);
+        ) {
           this.getNodeData(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
-          console.log('LOG (overpass s.) Requesting finished for', featureId);
         }
-        //overpass query then process,add to idb
       }
-      if(!goodConnectionMode){
-      //download nearby few nodes
-      console.log('get a random key from elements map');
-      let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
-      console.log('random key generated is' + randomkey);
-      if (!this.storageSrv.DownloadedNodes.has(randomkey)) {
-        console.log('LOG (overpass s.) Requesting started for in the background ', randomkey);
-        this.getNodeData(randomkey,false);
-        console.log('LOG (overpass s.) Requesting finished for in the background ', randomkey);
-      }    else{
-      //download nearby many nodes
-        } }
+
+      if (!goodConnectionMode) {
+        for (let i = 0; i < 5; i++) {
+          let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
+          if (!this.storageSrv.DownloadedNodes.has(randomkey)) {
+        this.getNodeData(randomkey, false);
+      } }   }
+
+      else {
+          for (let i = 0; i < 50; i++) {
+            let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
+            if (!this.storageSrv.DownloadedNodes.has(randomkey)) {
+              this.getNodeData(randomkey, false);
+            }
+          } }
       });
-
-
     /**
      * Handles downloading of missing relation members (nodes, ways).
      * @param data - object with rel and array containing IDs to download (member.ref)
@@ -241,7 +232,7 @@ export class OverpassService {
    * Downloads all data for currently selected node.
    * @param featureId
    */
-  private getNodeData(featureId: number,process: boolean): void {
+  private getNodeData(featureId: number, process: boolean): void {
     let requestBody = `
       [out:json][timeout:25];
       (
@@ -267,18 +258,14 @@ export class OverpassService {
           }
           console.log('LOG (overpass s.)', res);
           if (process) {
-            //process add to listofstops,litsofrelations
             this.processSrv.processNodeResponse(res);
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          console.log('list of c downloaded ');
-          console.log(this.storageSrv.DownloadedNodes);
-            // add to IDB
-          if(!this.storageSrv.DownloadedNodes.has(featureId)){
-            console.log('add started for' + featureId);
+          if (!this.storageSrv.DownloadedNodes.has(featureId)) {
             this.processSrv.addNodeResponseToIDB(res, featureId);
-            this.storageSrv.DownloadedNodes.add(featureId);}
+            this.storageSrv.DownloadedNodes.add(featureId);
+          }
         },
         (err) => {
           throw new Error(err);
@@ -636,20 +623,15 @@ export class OverpassService {
     let keys = Array.from(collection.keys());
     return keys[Math.floor(Math.random() * keys.length)];
   }
-  public getRandomKey2 (collection: Map<any, any>): any{
-    let length = collection.size;
 
-  }
-  public getNodeDataIDB(id:number):any {
-    console.log('get node data idb');
+  public getNodeDataIDB(id: number): any {
     this.dataservice.getRoutesforNode(id).then((relations: Array<object>[]) => {
-      for (let i = 0; i < relations.length;i++) {
+      for (let i = 0; i < relations.length; i++) {
         if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
           this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
           if (!relations[i]['tags']) {
             continue;
           }
-
           if (relations[i]['tags']['public_transport'] === 'stop_area') {
             this.storageSrv.listOfAreas.push(relations[i]);
           } else {
@@ -662,5 +644,4 @@ export class OverpassService {
       console.log(err);
     });
   }
-
  }

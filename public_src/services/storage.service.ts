@@ -83,6 +83,10 @@ export class StorageService {
       m: this.listOfMasters.length,
       r: this.listOfRelations.length,
       s: this.listOfStops.length,
+      ed: this.elementsDownloaded.size,
+      er: this.elementsRendered.size,
+      em: this.elementsMap.size,
+      qm: this.queriedMasters.size,
     };
     this.stats.emit(stats);
   }
