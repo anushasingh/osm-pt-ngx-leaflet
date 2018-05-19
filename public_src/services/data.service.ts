@@ -14,8 +14,8 @@ export class DataService {
   addStop(data: IPtStopDB): any {
 
     return this.db.transaction('rw', this.db.Stops, () => {
-      return this.db.Stops.add(data).then((lastKey) => {
-        console.log('(data s.) Added stop to idb');
+      return this.db.Stops.put(data).then((lastKey) => {
+        console.log('(data s.) Added stop with id ' + data.id + ' to idb');
       });
     });
   }
@@ -23,8 +23,8 @@ export class DataService {
   addRoute(data: IPtRelationDB): any {
 
     return this.db.transaction('rw', this.db.Routes, () => {
-      return this.db.Routes.add(data).then((lastKey) => {
-        console.log('(data s.) Added route to idb');
+      return this.db.Routes.put(data).then((lastKey) => {
+        console.log('(data s.) Added route with id ' + data.id + ' to idb');
       });
     });
   }
@@ -32,8 +32,8 @@ export class DataService {
   addWay(data: IPtWay): any {
 
     return this.db.transaction('rw', this.db.Ways, () => {
-      return this.db.Ways.add(data).then((lastKey) => {
-        console.log('(data s.) Added way to idb');
+      return this.db.Ways.put(data).then((lastKey) => {
+        console.log('(data s.) Added way with id ' + data.id + ' to idb');
       });
     });
   }
@@ -41,33 +41,15 @@ export class DataService {
   addRouteMaster(data: IPtRouteMasterNew): any {
 
     return this.db.transaction('rw', this.db.RouteMasters, () => {
-      return this.db.RouteMasters.add(data).then((lastKey) => {
-        console.log('(data s.) Added route_master to idb');
+      return this.db.RouteMasters.put(data).then((lastKey) => {
+        console.log('(data s.) Added route master with id ' + data.id + ' to idb');
       });
     });
   }
 
-  // getStop(id: number): any {
-  //   return this.db.transaction('r', this.db.Stops, () => {
-  //     console.log(id);
-  //     return this.db.Stops.get({id: id}).then ((firstFriend) => {
-  //       console.log("Friend with id 1: " + firstFriend.id);
-  //       return firstFriend;
-  //     });
-  //   });
-  // }
 
-  // addStopsRouteTable(stopid: number, routeid: number){
-  //
-  // }
-
-  // getRoutesforStop(): any{
-  //   return this.db.Routes.where();
-  //
-  // }
-
-  // add to relations of a stop
-  addtoroutes(stopid: number, routeid: number): any {
+  // push routeid to the routes array of a given stop
+  addtoRoutesofStop(stopid: number, routeid: number): any {
 
     return this.db.transaction('rw', this.db.Stops, () => {
       return this.db.Stops.where('id').equals(stopid).modify((x) => {
@@ -79,15 +61,16 @@ export class DataService {
 
   getallstops(): any {
     return this.db.transaction('rw', this.db.Stops, () => {
-       this.db.Stops.each((stop) => {
-       });
+      this.db.Stops.each((stop) => {
+      });
     });
   }
+
   getStopsForRoute(routeid: number): any {
-    return this.db.transaction('rw', this.db.Stops,  this.db.Routes,() => {
-      let nodemembers =[];
+    return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
+      let nodemembers = [];
       let stops = [];
-      return this.db.Routes.get({ id: routeid }).then((route) => {
+      return this.db.Routes.get({id: routeid}).then((route) => {
         nodemembers = route['nodemembers'];
       }).then(() => {
         return this.db.Stops.each((stop) => {
@@ -101,21 +84,28 @@ export class DataService {
     });
   }
 
-   // gets route relations for a given node id
+  // gets route relations for a given node id
   getRoutesforNode(stopid: number): any {
-
     return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
-      return this.db.Stops.get({ id: stopid }).then((stop) => {
-       let arrayofroutes = stop.routes; // contains only ids
-       let filteredroutes = [];
-       return this.db.Routes.each((route) => {
+      return this.db.Stops.get({id: stopid}).then((stop) => {
+        let arrayofroutes = stop.routes; // contains only ids
+        let filteredroutes = [];
+        return this.db.Routes.each((route) => {
           if (arrayofroutes.includes(route.id)) {
-             filteredroutes.push(route); }
+            filteredroutes.push(route);
+          }
         }).then(() => {
           return Promise.resolve(filteredroutes);
         });
       });
     });
+  }
+
+  addToDownloadedRoutes(relid: number): any {
+    return this.db.DownloadedRoutes.put({id: relid});
+  }
+  addToDownloadedStops(stopid: number): any {
+    return this.db.DownloadedStops.put({ id: stopid });
   }
 
 }

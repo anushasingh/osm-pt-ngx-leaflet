@@ -50,6 +50,8 @@ export class OverpassService {
         this.getNodeDataIDB(featureId);
       } else {
         if (!this.storageSrv.elementsDownloaded.has(featureId) && featureId > 0) {
+          console.log('(overpass ser.) stop ' + featureId + 'was not in idb, hence overpass query' +
+            ' is made');
           this.getNodeData(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
         }
@@ -59,13 +61,17 @@ export class OverpassService {
         for (let i = 0; i < 5; i++) {
           let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
           if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomkey)) {
-        this.getNodeData(randomkey, false);
+            // gets the data from overpass query and adds to IDB
+              console.log('Downloading' + randomkey + 'in background in slowconnection mode');
+              this.getNodeData(randomkey, false);
       } }   }
 
       else {
-          for (let i = 0; i < 50; i++) {
+          for (let i = 0; i < 25; i++) {
             let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
             if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomkey)) {
+              // gets the data from overpass query and adds to IDB
+              console.log('Downloading' + randomkey + 'in background in fast connection mode');
               this.getNodeData(randomkey, false);
             }
           }
@@ -268,9 +274,14 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          if (!this.storageSrv.completelyDownloadedNodesIDB.has(featureId)) {
-            this.processSrv.addResponseToIDB(res, featureId);
+          //FIXME : success returns even before all have been added, fix: use promise.all?
+          let success = this.processSrv.addResponseToIDB(res, featureId);
+          if (success) {
             this.storageSrv.completelyDownloadedNodesIDB.add(featureId);
+            console.log('(overpass srv.) added ' + featureId + 'to completelyDownloadedNodesIDB');
+            this.dataservice.addToDownloadedStops(featureId).then(() => {
+              console.log('(overpass srv.) added ' + featureId +' to downloadedstops table in IDB');
+            });
           }
         },
         (err) => {
@@ -634,7 +645,7 @@ export class OverpassService {
 
   public getNodeDataIDB(id: number): any {
     this.dataservice.getRoutesforNode(id).then((relations: Array<object>[]) => {
-      for (let i = 0; i < relations.length; i++) {
+      for(let i = 0; i < relations.length; i++) {
         if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
           this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
           if (!relations[i]['tags']) {

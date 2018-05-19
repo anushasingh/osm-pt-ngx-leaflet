@@ -162,8 +162,11 @@ export class ProcessService {
     }
     this.storageSrv.logStats();
   }
-  // add different elements (only ways&relations?) of node response to IDB
-  public addResponseToIDB(response: any,id: any): void{
+  // add different elements of node response to IDB
+  public addResponseToIDB(response: any, id: any): boolean {
+    // FIXME move all this logic to dataservice, to have a single db transaction and to
+    // avoid using flag, (how? can't use promise.all?)
+    let success: boolean = true;
     for (const element of response.elements) {
       if ((!this.storageSrv.stopsIndexedDb.has(element.id)) &&
         (!this.storageSrv.waysIndexedDb.has(element.id))
@@ -180,6 +183,7 @@ export class ProcessService {
                   this.storageSrv.stopsIndexedDb.add(element.id);
                 }).catch((err) => {
                 console.log('error' + err);
+                success = false;
               });
 
             }
@@ -197,8 +201,8 @@ export class ProcessService {
                 }
 
               }
-              let newelement:any = {};
-              for (let key in element){
+              let newelement: any = {};
+              for (let key in element) {
                 if (element.hasOwnProperty(key) && key !== 'members') {
                   newelement[key] = element[key];
                 }
@@ -210,20 +214,22 @@ export class ProcessService {
                   this.storageSrv.routesIndexedDb.add(element.id);
                 }).catch((err) => {
                 console.log('error' + err);
+                success = false;
               });
-              this.dataservice.addtoroutes(id, element.id).then(() => {
+              this.dataservice.addtoRoutesofStop(id, element.id).then(() => {
               }).catch((err) => {
                 console.log(err);
+                success = false;
               });
 
             }
-            // below not needed, as stops will never be a part of route_masters?
             if (element.tags.type === 'route_master') {
               this.dataservice.addRouteMaster(element)
                 .then(() => {
                   this.storageSrv.routeMastersIndexedDb.add(element.id);
                 }).catch((err) => {
                 console.log('error' + err);
+                success = false;
               });
             }
             break;
@@ -233,11 +239,13 @@ export class ProcessService {
                 this.storageSrv.waysIndexedDb.add(element.id);
               }).catch((err) => {
               console.log('error' + err);
+              success = false;
             });
             break;
         }
       }
   }
+   return success;
   }
   /**
    * Adds hash to URL hostname similarly like it is used on OSM (/#map=19/49.83933/18.29230)
@@ -261,6 +269,13 @@ export class ProcessService {
         this.storageSrv.elementsDownloaded.add(element.id);
         if (element.tags.route_master) {
           this.storageSrv.listOfMasters.push(element);
+          //add to IDB table masters
+          this.dataservice.addRouteMaster(element).then(
+            (routeMasterId) => {
+              this.storageSrv.routeMastersIndexedDb.add(routeMasterId);
+            }).catch((err) => {
+              console.log(err);
+          });
         } else {
           console.log('LOG (processing s.) WARNING: new elements? ', element);
         } // do not add other relations because they should be already added

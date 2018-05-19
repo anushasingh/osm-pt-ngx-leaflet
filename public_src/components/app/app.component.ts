@@ -57,18 +57,39 @@ export class AppComponent {
     this.dataSrv.db.Routes.orderBy('id').keys((keys) => {
       let routeSet = new Set(keys.map((item) => item));
       this.storageSrv.routesIndexedDb = routeSet;
+      console.log('(app comp.) ids of routes in IDB:');
+      console.log(this.storageSrv.routesIndexedDb);
     });
     this.dataSrv.db.RouteMasters.orderBy('id').keys((keys) => {
       let routemastersSet = new Set(keys.map((item) => item));
       this.storageSrv.routeMastersIndexedDb = routemastersSet;
+      console.log('(app comp.) ids of route masters in IDB:')
+      console.log(this.storageSrv.routeMastersIndexedDb);
     });
     this.dataSrv.db.Ways.orderBy('id').keys((keys) => {
       let waysSet = new Set(keys.map((item) => item));
       this.storageSrv.waysIndexedDb = waysSet;
+      console.log('(app comp.) ids of ways in IDB:');
+      console.log(this.storageSrv.waysIndexedDb);
+
     });
     this.dataSrv.db.Stops.orderBy('id').keys((keys) => {
       let stopsSet = new Set(keys.map((item) => item));
       this.storageSrv.stopsIndexedDb = stopsSet;
+      console.log('(app comp.) ids of stops in IDB:');
+      console.log(this.storageSrv.stopsIndexedDb);
+    });
+    this.dataSrv.db.DownloadedRoutes.orderBy('id').keys((keys) => {
+      let DownloadedRoutesSet = new Set(keys.map((item) => item));
+      this.storageSrv.completelyDownloadedRoutesIDB = DownloadedRoutesSet;
+      console.log('(app comp.) ids of completely downloaded routes in IDB:');
+      console.log(this.storageSrv.completelyDownloadedRoutesIDB);
+    });
+    this.dataSrv.db.DownloadedStops.orderBy('id').keys((keys) => {
+      let DownloadedStopsSet = new Set(keys.map((item) => item));
+      this.storageSrv.completelyDownloadedNodesIDB = DownloadedStopsSet;
+      console.log('(app comp.) ids of completely downloaded stops in IDB:');
+      console.log(this.storageSrv.completelyDownloadedNodesIDB);
     });
 
     const map = L.map('map', {
