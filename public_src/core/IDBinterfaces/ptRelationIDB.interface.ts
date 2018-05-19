@@ -1,7 +1,7 @@
-import { IOsmElement } from './osmElement.interface';
-import { IPtMember } from './ptMember';
+import { IOsmElement } from '../osmElement.interface';
+import { IPtMember } from '../ptMember';
 
-export interface IPtRelationDB extends IOsmElement {
+export interface IPtRelationIDB extends IOsmElement {
   type: 'relation';
   members: IPtMember[];
   tags: {

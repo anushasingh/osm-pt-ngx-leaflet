@@ -168,10 +168,10 @@ export class ProcessService {
     // avoid using flag, (how? can't use promise.all?)
     let success: boolean = true;
     for (const element of response.elements) {
-      if ((!this.storageSrv.stopsIndexedDb.has(element.id)) &&
-        (!this.storageSrv.waysIndexedDb.has(element.id))
-        && (!this.storageSrv.routeMastersIndexedDb.has(element.id)) &&
-        (!this.storageSrv.routesIndexedDb.has(element.id))
+      if ((!this.storageSrv.stopsIDB.has(element.id)) &&
+        (!this.storageSrv.waysIDB.has(element.id))
+        && (!this.storageSrv.routeMastersIDB.has(element.id)) &&
+        (!this.storageSrv.routesIDB.has(element.id))
       ) {
         switch (element.type) {
           case 'node':
@@ -180,7 +180,7 @@ export class ProcessService {
               newelement['routes'] = [];
               this.dataservice.addStop(newelement)
                 .then(() => {
-                  this.storageSrv.stopsIndexedDb.add(element.id);
+                  this.storageSrv.stopsIDB.add(element.id);
                 }).catch((err) => {
                 console.log('error' + err);
                 success = false;
@@ -211,13 +211,12 @@ export class ProcessService {
               newelement['waymembers'] = wayMembers;
               this.dataservice.addRoute(newelement)
                 .then(() => {
-                  this.storageSrv.routesIndexedDb.add(element.id);
+                  this.storageSrv.routesIDB.add(element.id);
                 }).catch((err) => {
                 console.log('error' + err);
                 success = false;
               });
-              this.dataservice.addtoRoutesofStop(id, element.id).then(() => {
-              }).catch((err) => {
+              this.dataservice.addtoRoutesofStop(id, element.id).catch((err) => {
                 console.log(err);
                 success = false;
               });
@@ -226,7 +225,7 @@ export class ProcessService {
             if (element.tags.type === 'route_master') {
               this.dataservice.addRouteMaster(element)
                 .then(() => {
-                  this.storageSrv.routeMastersIndexedDb.add(element.id);
+                  this.storageSrv.routeMastersIDB.add(element.id);
                 }).catch((err) => {
                 console.log('error' + err);
                 success = false;
@@ -236,7 +235,7 @@ export class ProcessService {
           case 'way':
             this.dataservice.addWay(element)
               .then(() => {
-                this.storageSrv.waysIndexedDb.add(element.id);
+                this.storageSrv.waysIDB.add(element.id);
               }).catch((err) => {
               console.log('error' + err);
               success = false;
@@ -244,8 +243,8 @@ export class ProcessService {
             break;
         }
       }
-  }
-   return success;
+   }
+    return success;
   }
   /**
    * Adds hash to URL hostname similarly like it is used on OSM (/#map=19/49.83933/18.29230)
@@ -269,10 +268,10 @@ export class ProcessService {
         this.storageSrv.elementsDownloaded.add(element.id);
         if (element.tags.route_master) {
           this.storageSrv.listOfMasters.push(element);
-          //add to IDB table masters
+          // add to IDB table masters
           this.dataservice.addRouteMaster(element).then(
             (routeMasterId) => {
-              this.storageSrv.routeMastersIndexedDb.add(routeMasterId);
+              this.storageSrv.routeMastersIDB.add(routeMasterId);
             }).catch((err) => {
               console.log(err);
           });

@@ -1,6 +1,6 @@
-import { Db } from './dexiedb';
-import { IPtStopDB } from '../core/ptStopDB.interface';
-import { IPtRelationDB } from '../core/ptRelationDB.interface';
+import { Db } from '../database/dexiedb';
+import { IPtStopIDB } from '../core/IDBinterfaces/ptStopIDB.interface';
+import { IPtRelationIDB } from '../core/IDBinterfaces/ptRelationIDB.interface';
 import { IPtRouteMasterNew } from '../core/ptRouteMasterNew.interface';
 import { IPtWay } from '../core/ptWay.interface';
 export class DataService {
@@ -11,7 +11,7 @@ export class DataService {
     this.db = new Db();
   }
 
-  addStop(data: IPtStopDB): any {
+  addStop(data: IPtStopIDB): any {
 
     return this.db.transaction('rw', this.db.Stops, () => {
       return this.db.Stops.put(data).then((lastKey) => {
@@ -20,7 +20,7 @@ export class DataService {
     });
   }
 
-  addRoute(data: IPtRelationDB): any {
+  addRoute(data: IPtRelationIDB): any {
 
     return this.db.transaction('rw', this.db.Routes, () => {
       return this.db.Routes.put(data).then((lastKey) => {
@@ -46,8 +46,6 @@ export class DataService {
       });
     });
   }
-
-
   // push routeid to the routes array of a given stop
   addtoRoutesofStop(stopid: number, routeid: number): any {
 
@@ -56,21 +54,12 @@ export class DataService {
         x.routes.push(routeid);
       });
     });
-
   }
-
-  getallstops(): any {
-    return this.db.transaction('rw', this.db.Stops, () => {
-      this.db.Stops.each((stop) => {
-      });
-    });
-  }
-
   getStopsForRoute(routeid: number): any {
     return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
       let nodemembers = [];
       let stops = [];
-      return this.db.Routes.get({id: routeid}).then((route) => {
+      return this.db.Routes.get({ id: routeid }).then((route) => {
         nodemembers = route['nodemembers'];
       }).then(() => {
         return this.db.Stops.each((stop) => {
@@ -87,7 +76,7 @@ export class DataService {
   // gets route relations for a given node id
   getRoutesforNode(stopid: number): any {
     return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
-      return this.db.Stops.get({id: stopid}).then((stop) => {
+      return this.db.Stops.get({ id: stopid }).then((stop) => {
         let arrayofroutes = stop.routes; // contains only ids
         let filteredroutes = [];
         return this.db.Routes.each((route) => {
@@ -102,10 +91,10 @@ export class DataService {
   }
 
   addToDownloadedRoutes(relid: number): any {
-    return this.db.DownloadedRoutes.put({id: relid});
+    return this.db.DownloadedRoutes.put({ id: relid });
   }
+
   addToDownloadedStops(stopid: number): any {
     return this.db.DownloadedStops.put({ id: stopid });
   }
-
 }

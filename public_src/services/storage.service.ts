@@ -39,17 +39,16 @@ export class StorageService {
   public edits: object[] = [];
   public editsChanged: EventEmitter<boolean> = new EventEmitter();
   public stats: EventEmitter<object> = new EventEmitter();
-  public stopsIndexedDb = new Set();
-  //ids of elements already in idb
+  // ids of elements already in idb
+  public stopsIDB = new Set();
   public platformsIndexedDb = new Set();
-  public routesIndexedDb = new Set();
-  public routeMastersIndexedDb = new Set();
-  public waysIndexedDb = new Set();
-  //stops/platforms for which all data has been downloaded and added to IDB
+  public routesIDB = new Set();
+  public routeMastersIDB = new Set();
+  public waysIDB = new Set();
+  // stops/platforms for which all data has been downloaded and added to IDB
   public completelyDownloadedNodesIDB = new Set();
+  // routes which have all their members in IDB
   public completelyDownloadedRoutesIDB = new Set();
-
-
   constructor() {
     this.currentElementsChange.subscribe((data) => {
       this.currentElement = data;
@@ -84,10 +83,6 @@ export class StorageService {
       m: this.listOfMasters.length,
       r: this.listOfRelations.length,
       s: this.listOfStops.length,
-      ed: this.elementsDownloaded.size,
-      er: this.elementsRendered.size,
-      em: this.elementsMap.size,
-      qm: this.queriedMasters.size,
     };
     this.stats.emit(stats);
   }

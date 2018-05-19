@@ -56,28 +56,28 @@ export class AppComponent {
   public ngOnInit(): any {
     this.dataSrv.db.Routes.orderBy('id').keys((keys) => {
       let routeSet = new Set(keys.map((item) => item));
-      this.storageSrv.routesIndexedDb = routeSet;
+      this.storageSrv.routesIDB = routeSet;
       console.log('(app comp.) ids of routes in IDB:');
-      console.log(this.storageSrv.routesIndexedDb);
+      console.log(this.storageSrv.routesIDB);
     });
     this.dataSrv.db.RouteMasters.orderBy('id').keys((keys) => {
       let routemastersSet = new Set(keys.map((item) => item));
-      this.storageSrv.routeMastersIndexedDb = routemastersSet;
+      this.storageSrv.routeMastersIDB = routemastersSet;
       console.log('(app comp.) ids of route masters in IDB:')
-      console.log(this.storageSrv.routeMastersIndexedDb);
+      console.log(this.storageSrv.routeMastersIDB);
     });
     this.dataSrv.db.Ways.orderBy('id').keys((keys) => {
       let waysSet = new Set(keys.map((item) => item));
-      this.storageSrv.waysIndexedDb = waysSet;
+      this.storageSrv.waysIDB = waysSet;
       console.log('(app comp.) ids of ways in IDB:');
-      console.log(this.storageSrv.waysIndexedDb);
+      console.log(this.storageSrv.waysIDB);
 
     });
     this.dataSrv.db.Stops.orderBy('id').keys((keys) => {
       let stopsSet = new Set(keys.map((item) => item));
-      this.storageSrv.stopsIndexedDb = stopsSet;
+      this.storageSrv.stopsIDB = stopsSet;
       console.log('(app comp.) ids of stops in IDB:');
-      console.log(this.storageSrv.stopsIndexedDb);
+      console.log(this.storageSrv.stopsIDB);
     });
     this.dataSrv.db.DownloadedRoutes.orderBy('id').keys((keys) => {
       let DownloadedRoutesSet = new Set(keys.map((item) => item));

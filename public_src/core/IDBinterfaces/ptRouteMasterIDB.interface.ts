@@ -1,7 +1,7 @@
-import { IOsmElement } from './osmElement.interface';
-import { IPtMember } from './ptMember';
+import { IOsmElement } from '../osmElement.interface';
+import { IPtMember } from '../ptMember';
 
-export interface IPtRouteMasterNew extends IOsmElement {
+export interface IPtRouteMasterIDB extends IOsmElement {
   type: 'relation';
   members: IPtMember[];
   tags: {
@@ -15,5 +15,4 @@ export interface IPtRouteMasterNew extends IOsmElement {
     colour: string,
     'public_transport:version': '2',
   };
-  stops: Array<any>[];
 }

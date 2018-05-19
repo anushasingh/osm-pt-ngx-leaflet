@@ -29,7 +29,7 @@ export class ToolbarComponent {
   public filtering: boolean;
 
   public currentElement: IOsmElement;
-  public stats = { s: 0, r: 0, a: 0, m: 0, ed: 0, er: 0, em:0 , qm: 0};
+  public stats = { s: 0, r: 0, a: 0, m: 0 };
 
   constructor(
     private confSrv: ConfService,

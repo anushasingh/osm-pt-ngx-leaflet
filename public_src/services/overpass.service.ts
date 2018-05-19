@@ -85,8 +85,8 @@ export class OverpassService {
     this.processSrv.membersToDownload.subscribe((data) => {
       const rel = data['rel'];
       const missingElements = data['missingElements'];
-      //get from IDB, else overpass query
-      if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)){
+      // get from IDB, else overpass query
+      if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)) {
         this.getRelationDataIDB(rel);
       } else {
         this.getRelationData(rel, missingElements);
@@ -274,13 +274,13 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          //FIXME : success returns even before all have been added, fix: use promise.all?
+          // FIXME : success returns even before all have been added, fix: use promise.all?
           let success = this.processSrv.addResponseToIDB(res, featureId);
           if (success) {
             this.storageSrv.completelyDownloadedNodesIDB.add(featureId);
             console.log('(overpass srv.) added ' + featureId + 'to completelyDownloadedNodesIDB');
             this.dataservice.addToDownloadedStops(featureId).then(() => {
-              console.log('(overpass srv.) added ' + featureId +' to downloadedstops table in IDB');
+              console.log('(overpass srv.) added ' + featureId + ' to downloadedstops table in IDB');
             });
           }
         },
@@ -663,14 +663,14 @@ export class OverpassService {
       console.log(err);
     });
   }
-  public getRelationDataIDB(rel: any): any{
+  public getRelationDataIDB(rel: any): any {
 
     this.dataservice.getStopsForRoute(7742605).then((res) => {
 
     this.processSrv.processNodeResponse(res);
 
     const transformedGeojson = this.mapSrv.osmtogeojson(res);
-    // this.storageSrv.localGeojsonStorage = transformedGeojson;
+    this.storageSrv.localGeojsonStorage = transformedGeojson;
     this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
 
     // continue with the rest of "exploreRelation" function
