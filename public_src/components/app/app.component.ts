@@ -54,7 +54,6 @@ export class AppComponent {
   }
 
   public ngOnInit(): any {
-
     this.dataSrv.db.Routes.orderBy('id').keys((keys) => {
       let routeSet = new Set(keys.map((item) => item));
       this.storageSrv.routesIndexedDb = routeSet;
@@ -71,6 +70,7 @@ export class AppComponent {
       let stopsSet = new Set(keys.map((item) => item));
       this.storageSrv.stopsIndexedDb = stopsSet;
     });
+
     const map = L.map('map', {
       center: L.latLng(49.686, 18.351),
       layers: [this.mapSrv.baseMaps.CartoDB_light],

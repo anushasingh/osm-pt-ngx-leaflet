@@ -44,13 +44,12 @@ export class OverpassService {
           false,
         );
       }
-      if (this.storageSrv.DownloadedNodes.has(featureId)) {
+      /*Checks if node was downloaded earlier and all it's data was added to IDB */
+      if (this.storageSrv.completelyDownloadedNodesIDB.has(featureId)) {
+      /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
         this.getNodeDataIDB(featureId);
       } else {
-        if (
-          !this.storageSrv.elementsDownloaded.has(featureId) &&
-          featureId > 0
-        ) {
+        if (!this.storageSrv.elementsDownloaded.has(featureId) && featureId > 0) {
           this.getNodeData(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
         }
@@ -59,17 +58,18 @@ export class OverpassService {
       if (!goodConnectionMode) {
         for (let i = 0; i < 5; i++) {
           let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
-          if (!this.storageSrv.DownloadedNodes.has(randomkey)) {
+          if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomkey)) {
         this.getNodeData(randomkey, false);
       } }   }
 
       else {
           for (let i = 0; i < 50; i++) {
             let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
-            if (!this.storageSrv.DownloadedNodes.has(randomkey)) {
+            if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomkey)) {
               this.getNodeData(randomkey, false);
             }
-          } }
+          }
+      }
       });
     /**
      * Handles downloading of missing relation members (nodes, ways).
@@ -79,7 +79,12 @@ export class OverpassService {
     this.processSrv.membersToDownload.subscribe((data) => {
       const rel = data['rel'];
       const missingElements = data['missingElements'];
-      this.getRelationData(rel, missingElements);
+      //get from IDB, else overpass query
+      if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)){
+        this.getRelationDataIDB(rel);
+      } else {
+        this.getRelationData(rel, missingElements);
+      }
     });
   }
 
@@ -110,6 +115,7 @@ export class OverpassService {
       })
       .subscribe(
         (res: IOverpassResponse) => {
+          // should add response to IDB
           this.processSrv.processResponse(res);
           // FIXME
           // this.processSrv.drawStopAreas();
@@ -262,9 +268,9 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          if (!this.storageSrv.DownloadedNodes.has(featureId)) {
-            this.processSrv.addNodeResponseToIDB(res, featureId);
-            this.storageSrv.DownloadedNodes.add(featureId);
+          if (!this.storageSrv.completelyDownloadedNodesIDB.has(featureId)) {
+            this.processSrv.addResponseToIDB(res, featureId);
+            this.storageSrv.completelyDownloadedNodesIDB.add(featureId);
           }
         },
         (err) => {
@@ -320,6 +326,8 @@ export class OverpassService {
           );
           this.storageSrv.elementsDownloaded.add(rel.id);
           this.processSrv.downloadedMissingMembers(rel, true, true);
+          this.processSrv.addResponseToIDB(res, false);
+          this.storageSrv.completelyDownloadedRoutesIDB.add(rel.id);
         },
         (err) => {
           throw new Error(err);
@@ -644,4 +652,25 @@ export class OverpassService {
       console.log(err);
     });
   }
- }
+  public getRelationDataIDB(rel: any): any{
+
+    this.dataservice.getStopsForRoute(7742605).then((res) => {
+
+    this.processSrv.processNodeResponse(res);
+
+    const transformedGeojson = this.mapSrv.osmtogeojson(res);
+    // this.storageSrv.localGeojsonStorage = transformedGeojson;
+    this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
+
+    // continue with the rest of "exploreRelation" function
+    console.log(
+      'LOG (overpass s.) Continue with downloaded missing members',
+      rel,
+    );
+    this.storageSrv.elementsDownloaded.add(rel.id);
+    this.processSrv.downloadedMissingMembers(rel, true, true);
+   }).catch((err) => {
+      console.log(err);
+    });
+  }
+}

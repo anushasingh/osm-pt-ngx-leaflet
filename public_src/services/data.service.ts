@@ -66,24 +66,38 @@ export class DataService {
   //
   // }
 
-  //add to relations of a stop
+  // add to relations of a stop
   addtoroutes(stopid: number, routeid: number): any {
 
     return this.db.transaction('rw', this.db.Stops, () => {
       return this.db.Stops.where('id').equals(stopid).modify((x) => {
-        console.log(x);
         x.routes.push(routeid);
-        console.log('this is x');
-        console.log(x);
       });
     });
 
   }
 
-  tempfunction(): any{
-    return this.db.transaction('rw', this.db.Stops, this.db.Routes, () => {
-
-
+  getallstops(): any {
+    return this.db.transaction('rw', this.db.Stops, () => {
+       this.db.Stops.each((stop) => {
+       });
+    });
+  }
+  getStopsForRoute(routeid: number): any {
+    return this.db.transaction('rw', this.db.Stops,  this.db.Routes,() => {
+      let nodemembers =[];
+      let stops = [];
+      return this.db.Routes.get({ id: routeid }).then((route) => {
+        nodemembers = route['nodemembers'];
+      }).then(() => {
+        return this.db.Stops.each((stop) => {
+          if (nodemembers.includes(stop.id)) {
+            stops.push(stop);
+          }
+        }).then(() => {
+          return Promise.resolve(stops);
+        });
+      });
     });
   }
 
@@ -96,7 +110,7 @@ export class DataService {
        let filteredroutes = [];
        return this.db.Routes.each((route) => {
           if (arrayofroutes.includes(route.id)) {
-             filteredroutes.push(route);}
+             filteredroutes.push(route); }
         }).then(() => {
           return Promise.resolve(filteredroutes);
         });
@@ -105,5 +119,3 @@ export class DataService {
   }
 
 }
-
-

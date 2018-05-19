@@ -163,7 +163,7 @@ export class ProcessService {
     this.storageSrv.logStats();
   }
   // add different elements (only ways&relations?) of node response to IDB
-  public addNodeResponseToIDB(response: any,id: any): void{
+  public addResponseToIDB(response: any,id: any): void{
     for (const element of response.elements) {
       if ((!this.storageSrv.stopsIndexedDb.has(element.id)) &&
         (!this.storageSrv.waysIndexedDb.has(element.id))
