@@ -281,9 +281,8 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          let type = res['elements'][0].tags.public_transport;
-          if (type) {
-            this.dataSrv.addResponseToIDB(res, featureId, type);
+          if(res['elements'][0]){
+            this.dataSrv.addResponseToIDB(res, featureId, res['elements'][0].tags.public_transport);
           }
         },
         (err) => {
