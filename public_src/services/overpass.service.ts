@@ -27,7 +27,7 @@ export class OverpassService {
     private processSrv: ProcessService,
     private storageSrv: StorageService,
     private mapSrv: MapService,
-    private dataservice: DataService,
+    private dataSrv: DataService,
     private ngRedux: NgRedux<IAppState>,
   ) {
     /**
@@ -45,34 +45,39 @@ export class OverpassService {
         );
       }
       /*Checks if node was downloaded earlier and all it's data was added to IDB */
-      if (this.storageSrv.completelyDownloadedNodesIDB.has(featureId)) {
+      if (this.storageSrv.completelyDownloadedPlatformsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        this.getNodeDataIDB(featureId);
-      } else {
+        this.getStopDataIDB(featureId);
+      } else if (this.storageSrv.completelyDownloadedStopsIDB.has(featureId)) {
+      /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
+        this.getPlatformDataIDB(featureId);
+      }
+      else {
         if (!this.storageSrv.elementsDownloaded.has(featureId) && featureId > 0) {
-          console.log('(overpass ser.) stop ' + featureId + 'was not in idb, hence overpass query' +
+          console.log('(overpass ser.) stop/platform with id ' + featureId + 'was not in idb, hence overpass query' +
             ' is made');
-          this.getNodeData(featureId, true);
+          this.getNodeDataOverpass(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
         }
       }
 
       if (!goodConnectionMode) {
         for (let i = 0; i < 5; i++) {
-          let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
-          if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomkey)) {
+          let randomKey = this.getRandomKey(this.storageSrv.elementsMap);
+          if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomKey)) {
             // gets the data from overpass query and adds to IDB
-              console.log('Downloading' + randomkey + 'in background in slowconnection mode');
-              this.getNodeData(randomkey, false);
-      } }   }
-
+              console.log('Downloading' + randomKey + 'in background in slow connection mode');
+              this.getNodeDataOverpass(randomKey, false);
+          }
+        }
+      }
       else {
           for (let i = 0; i < 25; i++) {
-            let randomkey = this.getRandomKey(this.storageSrv.elementsMap);
-            if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomkey)) {
+            let randomKey = this.getRandomKey(this.storageSrv.elementsMap);
+            if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomKey)) {
               // gets the data from overpass query and adds to IDB
-              console.log('Downloading' + randomkey + 'in background in fast connection mode');
-              this.getNodeData(randomkey, false);
+              console.log('Downloading' + randomKey + 'in background in fast connection mode');
+              this.getNodeDataOverpass(randomKey, false);
             }
           }
       }
@@ -87,8 +92,10 @@ export class OverpassService {
       const missingElements = data['missingElements'];
       // get from IDB, else overpass query
       if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)) {
+        console.log('Route already in IDB');
         this.getRelationDataIDB(rel);
       } else {
+        console.log('Route not already in IDB');
         this.getRelationData(rel, missingElements);
       }
     });
@@ -241,10 +248,10 @@ export class OverpassService {
   }
 
   /**
-   * Downloads all data for currently selected node.
+   * Downloads all data for currently selected node and adds it to IDB
    * @param featureId
    */
-  private getNodeData(featureId: number, process: boolean): void {
+  private getNodeDataOverpass(featureId: number, process: boolean): void {
     let requestBody = `
       [out:json][timeout:25];
       (
@@ -274,14 +281,9 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          // FIXME : success returns even before all have been added, fix: use promise.all?
-          let success = this.processSrv.addResponseToIDB(res, featureId);
-          if (success) {
-            this.storageSrv.completelyDownloadedNodesIDB.add(featureId);
-            console.log('(overpass srv.) added ' + featureId + 'to completelyDownloadedNodesIDB');
-            this.dataservice.addToDownloadedStops(featureId).then(() => {
-              console.log('(overpass srv.) added ' + featureId + ' to downloadedstops table in IDB');
-            });
+          let type = res['elements'][0].tags.public_transport;
+          if (type) {
+            this.dataSrv.addResponseToIDB(res, featureId, type);
           }
         },
         (err) => {
@@ -337,8 +339,7 @@ export class OverpassService {
           );
           this.storageSrv.elementsDownloaded.add(rel.id);
           this.processSrv.downloadedMissingMembers(rel, true, true);
-          this.processSrv.addResponseToIDB(res, false);
-          this.storageSrv.completelyDownloadedRoutesIDB.add(rel.id);
+          this.dataSrv.addResponseToIDB(res, false, 'route');
         },
         (err) => {
           throw new Error(err);
@@ -642,9 +643,30 @@ export class OverpassService {
     let keys = Array.from(collection.keys());
     return keys[Math.floor(Math.random() * keys.length)];
   }
-
-  public getNodeDataIDB(id: number): any {
-    this.dataservice.getRoutesforNode(id).then((relations: Array<object>[]) => {
+  public getStopDataIDB(stopId: number): any {
+    this.dataSrv.getRoutesForStop(stopId).then((relations: Array<object>[]) => {
+      for(let i = 0; i < relations.length; i++) {
+        if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
+          this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
+          if (!relations[i]['tags']) {
+            continue;
+          }
+          if (relations[i]['tags']['public_transport'] === 'stop_area') {
+            // check if we are adding stop areas in the first place?
+            this.storageSrv.listOfAreas.push(relations[i]);
+          } else {
+            this.storageSrv.listOfRelations.push(relations[i]);
+          }
+        }
+        this.storageSrv.logStats();
+      }
+    }).catch((err) => {
+      console.log('Could not fetch ids of relations for a stop with id :' + stopId);
+      console.log(err);
+    });
+  }
+  public getPlatformDataIDB(platformId: number): any {
+    this.dataSrv.getRoutesForPlatform(platformId).then((relations: Array<object>[]) => {
       for(let i = 0; i < relations.length; i++) {
         if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
           this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
@@ -660,12 +682,13 @@ export class OverpassService {
         this.storageSrv.logStats();
       }
     }).catch((err) => {
+      console.log('Could not fetch ids of relations for a platform with id :' + platformId);
       console.log(err);
     });
   }
   public getRelationDataIDB(rel: any): any {
 
-    this.dataservice.getStopsForRoute(7742605).then((res) => {
+    this.dataSrv.getMembersForRoute(rel.id).then((res) => {
 
     this.processSrv.processNodeResponse(res);
 
