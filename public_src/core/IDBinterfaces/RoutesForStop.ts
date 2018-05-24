@@ -1,3 +1,1 @@
-export interface IRoutesForStopIDB {
-  routeIds: Array<number>;
-}
+export interface IRoutesForStopIDB extends  Array<number> {}

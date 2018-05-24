@@ -47,40 +47,42 @@ export class OverpassService {
       /*Checks if node was downloaded earlier and all it's data was added to IDB */
       if (this.storageSrv.completelyDownloadedPlatformsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        this.getStopDataIDB(featureId);
+        console.log('overpass ser.) platform with id ' + featureId + 'in IDB');
+        this.getPlatformDataIDB(featureId);
       } else if (this.storageSrv.completelyDownloadedStopsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        this.getPlatformDataIDB(featureId);
+        console.log('(overpass ser.) stop with id ' + featureId + 'in IDB');
+        this.getStopDataIDB(featureId);
       }
       else {
         if (!this.storageSrv.elementsDownloaded.has(featureId) && featureId > 0) {
-          console.log('(overpass ser.) stop/platform with id ' + featureId + 'was not in idb, hence overpass query' +
-            ' is made');
+          console.log('(overpass ser.) stop/platform with id ' + featureId + 'was not in idb, hence overpass query ' +
+            'is made');
           this.getNodeDataOverpass(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
         }
       }
 
-      if (!goodConnectionMode) {
-        for (let i = 0; i < 5; i++) {
-          let randomKey = this.getRandomKey(this.storageSrv.elementsMap);
-          if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomKey)) {
-            // gets the data from overpass query and adds to IDB
-              console.log('Downloading' + randomKey + 'in background in slow connection mode');
-              this.getNodeDataOverpass(randomKey, false);
-          }
-        }
-      }
-      else {
-          for (let i = 0; i < 25; i++) {
-            let randomKey = this.getRandomKey(this.storageSrv.elementsMap);
-            if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomKey)) {
-              // gets the data from overpass query and adds to IDB
-              console.log('Downloading' + randomKey + 'in background in fast connection mode');
-              this.getNodeDataOverpass(randomKey, false);
-            }
-          }
-      }
+      // if (!goodConnectionMode) {
+      //   for (let i = 0; i < 5; i++) {
+      //     let randomKey = this.getRandomKey(this.storageSrv.elementsMap);
+      //     if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomKey)) {
+      //       // gets the data from overpass query and adds to IDB
+      //         console.log('Downloading' + randomKey + 'in background in slow connection mode');
+      //         this.getNodeDataOverpass(randomKey, false);
+      //     }
+      //   }
+      // }
+      // else {
+      //     for (let i = 0; i < 25; i++) {
+      //       let randomKey = this.getRandomKey(this.storageSrv.elementsMap);
+      //       if (!this.storageSrv.completelyDownloadedNodesIDB.has(randomKey)) {
+      //         // gets the data from overpass query and adds to IDB
+      //         console.log('Downloading' + randomKey + 'in background in fast connection mode');
+      //         this.getNodeDataOverpass(randomKey, false);
+      //       }
+      //     }
+      // }
       });
     /**
      * Handles downloading of missing relation members (nodes, ways).
@@ -281,7 +283,7 @@ export class OverpassService {
             this.loadSrv.hide();
             this.getRouteMasters(10);
           }
-          if(res['elements'][0]){
+          if (res['elements'][0]) {
             this.dataSrv.addResponseToIDB(res, featureId, res['elements'][0].tags.public_transport);
           }
         },
@@ -644,6 +646,9 @@ export class OverpassService {
   }
   public getStopDataIDB(stopId: number): any {
     this.dataSrv.getRoutesForStop(stopId).then((relations: Array<object>[]) => {
+      if (relations.length === 0) {
+        console.log('No routes found for stop with id ' + stopId + 'in IDB');
+      }
       for(let i = 0; i < relations.length; i++) {
         if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
           this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);
@@ -666,6 +671,9 @@ export class OverpassService {
   }
   public getPlatformDataIDB(platformId: number): any {
     this.dataSrv.getRoutesForPlatform(platformId).then((relations: Array<object>[]) => {
+      if (relations.length === 0) {
+        console.log('No routes found for platform with id ' + platformId + 'in IDB');
+      }
       for(let i = 0; i < relations.length; i++) {
         if (!this.storageSrv.elementsMap.has(relations[i]['id'])) {
           this.storageSrv.elementsMap.set(relations[i]['id'], relations[i]);

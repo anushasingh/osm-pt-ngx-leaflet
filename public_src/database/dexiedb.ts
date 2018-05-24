@@ -28,8 +28,8 @@ export class Db extends Dexie {
       CompletelyDownloadedStops: 'id',
       CompletelyDownloadedPlatforms: 'id',
       CompletelyDownloadedRoutes: 'id',
-      RoutesForPlatforms : 'id',
-      RoutesForStops : 'id',
+      RoutesForPlatforms : '',
+      RoutesForStops : '',
     });
   }
 }
