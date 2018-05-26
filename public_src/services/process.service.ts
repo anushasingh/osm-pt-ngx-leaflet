@@ -15,7 +15,8 @@ import { IOverpassResponse } from '../core/overpassResponse.interface';
 
 import { IAppState } from '../store/model';
 import { AppActions } from '../store/app/actions';
-import { DataService } from './data.service';
+import { DbService } from './db.service';
+import {element} from 'protractor';
 // import { OverpassService } from './overpass.service';
 
 @Injectable()
@@ -38,7 +39,7 @@ export class ProcessService {
     private loadSrv: LoadService,
     private mapSrv: MapService,
     private storageSrv: StorageService,
-    private dataservice: DataService,
+    private dataservice: DbService,
     // private overpassSrv: OverpassService,
 
   ) {
@@ -139,8 +140,6 @@ export class ProcessService {
    * @param response
    */
   public processNodeResponse(response: any): void {
-    console.log('process node response');
-    console.log(response);
     for (const element of response.elements) {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
@@ -168,35 +167,6 @@ export class ProcessService {
     console.log('finish process node response');
   }
 
-  public processRelationResponse(response: any): void {
-    console.log('process node response');
-    console.log(response);
-    for (const element of response) {
-      if (!this.storageSrv.elementsMap.has(element.id)) {
-        this.storageSrv.elementsMap.set(element.id, element);
-        if (!element.tags) {
-          continue;
-        }
-        switch (element.type) {
-          case 'node':
-            this.storageSrv.elementsDownloaded.add(element.id);
-            if (element.tags.bus === 'yes' || element.tags.public_transport) {
-              this.storageSrv.listOfStops.push(element);
-            }
-            break;
-          case 'relation':
-
-            if (element.tags.public_transport === 'stop_area') {
-              this.storageSrv.listOfAreas.push(element);
-            } else {
-              this.storageSrv.listOfRelations.push(element);
-            }
-        }
-      }
-    }
-    this.storageSrv.logStats();
-  }
-  // add different elements of node response to IDB
   /**
    * Adds hash to URL hostname similarly like it is used on OSM (/#map=19/49.83933/18.29230)
    */
@@ -241,9 +211,11 @@ export class ProcessService {
     const idsHaveMaster: number[] = [];
     this.storageSrv.listOfMasters.forEach((master) => {
       for (const member of master['members']) {
+        console.log('ids have master pushed');
         idsHaveMaster.push(member['ref']);
       }
     });
+    console.log('push' + idsHaveMaster);
     this.refreshMasters.emit({ idsHaveMaster });
     console.log('LOG (processing s.) Master IDs are:', idsHaveMaster);
   }
@@ -357,6 +329,7 @@ export class ProcessService {
         this.storageSrv.listOfVariants.push(routeVariant);
       }
     }
+    console.log(this.storageSrv.listOfVariants);
     this.refreshSidebarView('relation');
   }
 
@@ -402,7 +375,7 @@ export class ProcessService {
       rel['members'].length > 0 &&
       missingElements.length > 0 && !this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)
     ) {
-      console.log('Route not in JS, not in IDB,has some members, and has missing members');
+      console.log('LOG (processing s.) Route not in JS, not in IDB,has some members, and has missing members'+ rel.id);
       console.log(
         'LOG (processing s.) Relation is not completely downloaded. Missing: ' +
           missingElements.join(', '),
@@ -416,12 +389,14 @@ export class ProcessService {
       (missingElements.length === 0 && rel.id > 0) ||
       (rel.id < 0 && rel['members'].length > 0)
     ) {
-      console.log('(Route in JS) or (no missing elements & old) or (new & has some members)');
+      console.log('LOG (processing s.) (Route in JS) or (no missing elements &' +
+        ' old) or (new & has some members)' + rel.id);
       console.log('podminka plati', rel.id, rel['members'].length);
       this.downloadedMissingMembers(rel, true, zoomToElement);
       this.refreshTagView(rel);
+      this.storageSrv.elementsDownloaded.add(rel.id);
     } else if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)) {
-      console.log('Route in IDB');
+      console.log('Route in IDB' + rel.id);
       // will have empty missing elements array
       this.getRelationDataIDB(rel);
     } else {
@@ -666,20 +641,17 @@ export class ProcessService {
   }
   public getRelationDataIDB(rel: any): any {
      this.dataservice.getMembersForRoute(rel.id).then((res) => {
+       console.log('Got from IDB');
+       console.log(res);
        this.processNodeResponse(res);
-       console.log('1');
        const transformedGeojson = this.mapSrv.osmtogeojson(res);
-       console.log('2');
        this.storageSrv.localGeojsonStorage = transformedGeojson;
-       console.log('3');
        this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
-       console.log('4');
        this.storageSrv.elementsDownloaded.add(rel.id);
-       console.log('5');
        this.downloadedMissingMembers(rel, true, true);
-       console.log('6');
     }).catch((err) => {
-      console.log('Error in fetching and displaying the data ')
+      console.log('LOG (overpass s.) Error in fetching / displaying the data for route with id : '
+        + rel.id + 'from IDB')
       console.log(err);
     });
   }

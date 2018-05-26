@@ -51,9 +51,11 @@ export class StorageService {
   public completelyDownloadedRoutesIDB = new Set();
   public completelyDownloadedStopsIDB = new Set();
   public completelyDownloadedPlatformsIDB = new Set();
+  public getIdsQueriedRoutesForMaster = new Set();
   public completelyDownloadedMasterRoutesIDB = new Set();
   public queriedRoutesForMastersIDB = new Set();
   public idbMsg: EventEmitter<string> = new EventEmitter();
+
 
   constructor() {
     this.currentElementsChange.subscribe((data) => {

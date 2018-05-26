@@ -7,7 +7,7 @@ import { LoadService } from './load.service';
 import { MapService } from './map.service';
 import { ProcessService } from './process.service';
 import { StorageService } from './storage.service';
-import { DataService } from './data.service';
+import { DbService } from './db.service';
 
 import { create } from 'xmlbuilder';
 
@@ -27,7 +27,7 @@ export class OverpassService {
     private processSrv: ProcessService,
     private storageSrv: StorageService,
     private mapSrv: MapService,
-    private dataSrv: DataService,
+    private dataSrv: DbService,
     private ngRedux: NgRedux<IAppState>,
   ) {
     /**
@@ -47,17 +47,17 @@ export class OverpassService {
       /*Checks if node was downloaded earlier and all it's data was added to IDB */
       if (this.storageSrv.completelyDownloadedPlatformsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        console.log('overpass ser.) Platform with id ' + featureId + 'in IDB');
+        console.log('LOG (overpass s.) Platform with id : ' + featureId + ' in IDB');
         this.getPlatformDataIDB(featureId);
       } else if (this.storageSrv.completelyDownloadedStopsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        console.log('(overpass ser.) Stop with id ' + featureId + 'in IDB');
+        console.log('LOG (overpass s.) Stop with id : ' + featureId + ' in IDB');
         this.getStopDataIDB(featureId);
       }
       else {
         if (!this.storageSrv.elementsDownloaded.has(featureId) && featureId > 0) {
-          console.log('(overpass ser.) Stop/Platform with id ' + featureId + 'was not in idb, hence overpass query ' +
-            'is made');
+          console.log('LOG (overpass s.) Stop/Platform with id : ' + featureId + ' was not in IDB, hence overpass ' +
+            'query is made.');
           this.getNodeDataOverpass(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
         }
@@ -92,15 +92,8 @@ export class OverpassService {
     this.processSrv.membersToDownload.subscribe((data) => {
       const rel = data['rel'];
       const missingElements = data['missingElements'];
-      // get from IDB, else overpass query
-      if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)) {
-        console.log('Route already in IDB');
-        this.processSrv.getRelationDataIDB(rel);
-      } else {
-        console.log('Route not already in IDB');
-        this.getRelationData(rel, missingElements);
-      }
-    });
+      this.getRelationData(rel, missingElements);
+          });
   }
 
   /**
@@ -161,8 +154,6 @@ export class OverpassService {
       }
     }, 7500);
     const idsArr: Array<number> = this.findRouteIdsWithoutMaster();
-    // filter ids which are already in IDB, then process amd add to queried
-    // overpass api for remaining
     if (idsArr.length <= minNumOfRelations) {
       this.loadSrv.hide();
       return console.log(
@@ -181,7 +172,6 @@ export class OverpassService {
 
     idsArr.forEach((id) => {
       if (this.storageSrv.queriedRoutesForMastersIDB.has(id)) {
-
         routesInIDB.push(id);
       }
       else {
@@ -190,11 +180,8 @@ export class OverpassService {
     });
     // wrong
     if (routesInIDB.length !== 0) {
-      console.log('some routes in IDB');
     // wrong
       this.dataSrv.getRoutesForMasterRoute(routesInIDB).then((res) => {
-        console.log('got this for Idb');
-        console.log(res);
         this.markQueriedRelations(routesInIDB);
         this.processSrv.processMastersResponse(res);
         }).catch((err) => {
@@ -202,13 +189,6 @@ export class OverpassService {
         console.log(err);
       });
     }
-    // if (!routesNotInIDB.length) {
-    //   console.log(idsArr);
-    //   console.log(routesInIDB);
-    //   console.log(routesNotInIDB);
-    //   console.log('all in idb, nothing to get from overpass');
-    //   return;
-    // }
     let requestBody: string = `
             [out:json][timeout:25][bbox:{{bbox}}];
             (
@@ -231,10 +211,9 @@ export class OverpassService {
               'No response from API. Try to select other master relation again please.',
             );
           }
-          console.log('master query response');
-          console.log(res);
           this.markQueriedRelations(idsArr);
           this.dataSrv.addToQueriedRoutesforMasters(idsArr).then(() => {
+            this.storageSrv.queriedRoutesForMastersIDB.add(idsArr);
             console.log('Added routes to queried routes in IDB');
             console.log(idsArr);
           });
@@ -322,19 +301,26 @@ export class OverpassService {
             return alert('No response from API. Try to select element again please.');
           }
           console.log('LOG (overpass s.)', res);
-          // fix when not processed, not added to elements map: fix
           if (process) {
             this.processSrv.processNodeResponse(res);
             this.loadSrv.hide();
             this.getRouteMasters(10);
           } else {
+            // Only add to elements map and not update listOfStops etc. when process is equal to false
             for (const element of res['elements']) {
               if (!this.storageSrv.elementsMap.has(element.id)) {
                 this.storageSrv.elementsMap.set(element.id, element); }
-          }
+            }
           }
           if (res['elements'][0]) {
-            this.dataSrv.addResponseToIDB(res, featureId, res['elements'][0].tags.public_transport);
+            this.dataSrv.addResponseToIDB(res, featureId, res['elements'][0].tags.public_transport).then(() => {
+              console.log('LOG (overpass s.) Successfully added Overpass API \'s for id: ' + featureId + 'to IDB');
+            }).catch((err) => {
+              console.log('LOG (overpass s.) Could not complete transaction successfully for addition ' +
+                'of overpass API \'s response of ' + featureId + ', All previous operations for ' +
+                'this transaction will be rolled back');
+              console.log(err);
+            });
           }
         },
         (err) => {
@@ -391,9 +377,9 @@ export class OverpassService {
           this.storageSrv.elementsDownloaded.add(rel.id);
           this.processSrv.downloadedMissingMembers(rel, true, true);
           this.dataSrv.addResponseToIDB(res, rel.id, 'route');
-          console.log('finish get relation data');
         },
         (err) => {
+          console.log('LOG (overpass s.) Error in getRelationData from Overpass');
           throw new Error(err);
         });
   }

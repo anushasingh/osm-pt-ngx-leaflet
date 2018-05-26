@@ -17,7 +17,7 @@ export class Db extends Dexie {
   CompletelyDownloadedRoutes: Dexie.Table<IDownloadedRoutes, number>;
   RoutesForStops: Dexie.Table<IRoutesForStopIDB, number>;
   RoutesForPlatforms: Dexie.Table<IRoutesForStopIDB, number>;
-  QueriedRoutesforMasters: Dexie.Table<IDownloadedStops, number>;
+  QueriedRoutesForMasters: Dexie.Table<IDownloadedStops, number>;
   constructor() {
     super('Database');
     this.version(1).stores({
@@ -31,7 +31,7 @@ export class Db extends Dexie {
       CompletelyDownloadedRoutes: 'id',
       RoutesForPlatforms : '',
       RoutesForStops : '',
-      QueriedRoutesforMasters: 'id',
+      QueriedRoutesForMasters: 'id',
     });
   }
 }

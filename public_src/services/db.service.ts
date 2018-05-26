@@ -1,40 +1,14 @@
 import { Db } from '../database/dexiedb';
-import { IPtRouteMasterNew } from '../core/ptRouteMasterNew.interface';
 import { StorageService } from './storage.service';
 import { Injectable } from '@angular/core';
 @Injectable()
-export class DataService {
+export class DbService {
 
   public db: Db;
 
   constructor(private storageSrv: StorageService) {
     this.db = new Db();
   }
-  // // these are never used?
-  // /* fetches the array of ids of platforms stored in IDB */
-  // getIdsPlatformsIDB(): any {
-  //   return this.db.PtPlatforms.toCollection().primaryKeys();
-  // }
-  //
-  // /* fetches the array of ids of stops stored in IDB */
-  // getIdsStopsIDB(): any {
-  //   return this.db.PtStops.toCollection().primaryKeys();
-  // }
-  //
-  // /* fetches the array of ids of routes stored in IDB */
-  // getIdsRoutesIDB(): any {
-  //   return this.db.PtRoutes.toCollection().primaryKeys();
-  // }
-  //
-  // /* fetches the array of ids of master routes stored in IDB  */
-  // getIdsMasterRoutesIDB(): any {
-  //   return this.db.PtRouteMasters.toCollection().primaryKeys();
-  // }
-  //
-  // /* fetches the array of ids of ways stored in IDB */
-  // getIdsWaysIDB(): any {
-  //   return this.db.PtWays.toCollection().primaryKeys();
-  // }
 
   /* fetches the array of ids of completely downloaded stops stored in IDB*/
   getIdsCompletelyDownloadedStops(): any {
@@ -51,25 +25,15 @@ export class DataService {
   getIdsCompletelyDownloadedRoutes(): any {
     return this.db.CompletelyDownloadedRoutes.toCollection().primaryKeys();
   }
-
+  getIdsQueriedRoutesForMaster(): any {
+    return this.db.QueriedRoutesForMasters.toCollection().primaryKeys();
+  }
   addRouteMasters(masterRoutes: any): any {
       return this.db.PtRouteMasters.bulkPut(masterRoutes).then(() => {
         console.log('(data s.) Added route masters with id ' + masterRoutes.map((masterRoute) => {
           return masterRoute.id;
         }).join(',') + ' to IDB');
       });
-  }
-
-  addToCompletelyDownloadedStops(stopId: number): any {
-    return this.db.CompletelyDownloadedStops.put({ id: stopId });
-  }
-
-  addToCompletelyDownloadedPlatforms(platformId: number): any {
-    return this.db.CompletelyDownloadedPlatforms.put({ id: platformId });
-  }
-
-  addToCompletelyDownloadedRoutes(routeId: number): any {
-    return this.db.CompletelyDownloadedRoutes.put({ id: routeId });
   }
   getRoutesForStop(stopId: number): any {
     return this.db.transaction('rw', this.db.RoutesForStops, this.db.PtRoutes, () => {
@@ -111,8 +75,22 @@ export class DataService {
       });
     });
   }
+  addToQueriedRoutesforMasters(routeIds: Array<number>): any {
+    return this.db.transaction('rw', this.db.QueriedRoutesForMasters, () => {
+      routeIds.forEach((routeId) => {
+        return this.db.QueriedRoutesForMasters.put({ id: routeId });
+      });
+    });
+  }
 
-  public addResponseToIDB(response: any, id: any, type: string): any {
+  /**
+   * Adds Overpass API 's response to IndexedDb
+   * @param response
+   * @param id
+   * @param {string} type
+   * @returns {any}
+   */
+  public addResponseToIDB(response: any, id: any, type: string): Promise<any> {
     let routeIds = [];
     let routes = [];
     let platforms = [];
@@ -121,12 +99,7 @@ export class DataService {
     let ways = [];
     for (let i = 0; i < response.elements.length; i++) {
       let element = response.elements[i];
-      if ((!this.storageSrv.stopsIDB.has(element.id)) &&
-        (!this.storageSrv.waysIDB.has(element.id))
-        && (!this.storageSrv.routeMastersIDB.has(element.id)) &&
-        (!this.storageSrv.routesIDB.has(element.id))
-      ) {
-        switch (element.type) {
+      switch (element.type) {
           case 'node':
             if (element.tags.public_transport === 'platform') {
               platforms.push(element);
@@ -152,68 +125,63 @@ export class DataService {
           case 'way':
             ways.push(element);
             break;
-        }
       }
     }
     return this.db.transaction('rw', [this.db.RoutesForPlatforms, this.db.PtRoutes, this.db.PtStops,
       this.db.PtPlatforms, this.db.PtWays, this.db.RoutesForStops, this.db.PtRouteMasters,
       this.db.CompletelyDownloadedStops, this.db.CompletelyDownloadedPlatforms,
       this.db.CompletelyDownloadedRoutes], () => {
-
-      if (platforms.length !== 0) {
+       if (platforms.length !== 0) {
         this.db.PtPlatforms.bulkPut(platforms).then(() => {
-          // this.storageSrv.idbMsg.emit('Added platforms : [ ' + platforms.map((platform) => {
-          //   return platform.id;
-          // }).join(',') + ' ] to IDB for overpass API \'s response of :' + id);
-          console.log('Added platforms : [ ' + platforms.map((platform) => {
+          console.log('LOG (db s.) Added platforms : [ ' + platforms.map((platform) => {
             return platform.id;
-          }).join(',') + ' ] to IDB for overpass API \'s response of :' + id);
+          }).join(',') + ' ] to IDB for Overpass API \'s response of :' + id);
         }).catch((err) => {
-          console.log('Error in adding platforms to IDB');
+          console.log('LOG (db s.) Error in adding platforms to IDB');
           console.log(err);
           throw err;
         });
       }
-      if (stops.length !== 0) {
+       if (stops.length !== 0) {
         this.db.PtStops.bulkPut(stops).then(() => {
-          console.log('Added stops : ' + stops.map((stop) => {
+          console.log('LOG (db s.) Added stops : [ ' + stops.map((stop) => {
             return stop.id;
-          }).join(',') + ' to IDB for overpass API \'s response of :' + id);
+          }).join(',') + ' ] to IDB for overpass API \'s response of : ' + id);
         }).catch((err) => {
-          console.log('error in adding stops to idb');
+          console.log('LOG (db s.) Error in adding stops to IDB');
           console.log(err);
           throw err;
         });
       }
-      if (ways.length !== 0) {
+       if (ways.length !== 0) {
         this.db.PtWays.bulkPut(ways).then(() => {
-          console.log('Added ways : ' + ways.map((way) => {
+          console.log('LOG (db s.) Added ways : [ ' + ways.map((way) => {
             return way.id;
-          }).join(',') + ' to IDB for overpass API \'s response of :' + id);
+          }).join(',') + ' ] to IDB for overpass API \'s Overpass API \'s response of : ' + id);
         }).catch((err) => {
-          console.log('error in adding ways to idb');
+          console.log('LOG (db s.) Error in adding ways to IDB');
           console.log(err);
           throw err;
         });
       }
-      if (routeMasters.length !== 0) {
+       if (routeMasters.length !== 0) {
         this.db.PtRouteMasters.bulkPut(routeMasters).then(() => {
-          console.log('Added route masters : ' + routeMasters.map((routeMaster) => {
+          console.log('LOG (db s.) Added route masters : [ ' + routeMasters.map((routeMaster) => {
             return routeMaster.id;
-          }).join(',') + ' to IDB for overpass API \'s response of :' + id);
+          }).join(',') + ' ] to IDB for overpass API \'s Overpass API \'s response of :' + id);
         }).catch((err) => {
-          console.log('error in adding route masters to idb');
+          console.log('LOG (db s.) Error in adding route_masters to IDB');
           console.log(err);
           throw err;
         });
       }
-      if (routes.length !== 0) {
+       if (routes.length !== 0) {
         this.db.PtRoutes.bulkPut(routes).then(() => {
-          console.log('Added routes : ' + routes.map((route) => {
+          console.log('LOG (db s.) Added routes : [ ' + routes.map((route) => {
             return route.id;
-          }).join(',') + ' to IDB for overpass API \'s response of :' + id);
+          }).join(',') + ' ] to IDB for Overpass API \'s response of :' + id);
         }).catch((err) => {
-          console.log('error in adding routes to idb');
+          console.log('LOG (db s.) Error in adding routes to IDB');
           console.log(err);
           throw err;
         });
@@ -222,68 +190,74 @@ export class DataService {
     }).then(() => {
       if (type === 'stop_position') {
         if (routeIds.length !== 0) {
-          this.db.RoutesForStops.add(routeIds, id).then((stopId) => {
-            console.log('Added routeIds : ' + routeIds.map((routeId) => {
+          this.db.RoutesForStops.add(routeIds).then((stopId) => {
+            console.log('LOG (db s.) Added routeIds : [ ' + routeIds.map((routeId) => {
               return routeId;
             })
-              .join(',') + ' for stop' + stopId + 'to IDB for overpass API \'s response of :' + id);
+              .join(',') + ' ] for stop with id :' + stopId + 'to IDB for overpass API \'s response of :' + id);
           }).catch((err) => {
-            console.log('Could not add routeIds : ' + routeIds.map((routeId) => {
+            console.log('LOG (db s.) Error in adding routeIds : [ ' + routeIds.map((routeId) => {
               return routeId;
             })
-              .join(',') + ' for stop' + id + 'to IDB for overpass API \'s response of :' + id);
+              .join(',') + ' ] for stop with id : : ' + id + 'to IDB for overpass API \'s response of :' + id);
+            /* transaction will not be aborted and previous operations will not be
+            rolled back as error is caught */
             console.log(err);
           });
         }
-        this.storageSrv.completelyDownloadedStopsIDB.add(id);
-        this.addToCompletelyDownloadedStops(id).then(() => {
-          console.log('Added stop with id : ' + id + ' to completely downloaded stops in' +
-            ' IDB for overpass API \'s response of :' + id);
+        this.db.CompletelyDownloadedStops.put({ id }).then(() => {
+          this.storageSrv.completelyDownloadedStopsIDB.add(id);
+          console.log('LOG (db s.) Added stop with id : ' + id + ' to completely downloaded stops in' +
+            ' IDB for overpass API \'s response of : ' + id);
         }).catch((err) => {
-          console.log('Could not add stop with id : ' + id + 'to completely downloaded stops ' +
+          console.log('LOG (db s.) Error in adding stop with id : ' + id + 'to completely downloaded stops ' +
             'in IDB for overpass API \'s response of :' + id);
+          /* transaction will not be aborted and previous operations will not be
+          rolled back as error is caught */
           console.log(err);
         });
       }
       if (type === 'platform') {
         if (routeIds.length !== 0) {
           this.db.RoutesForPlatforms.add(routeIds, id).then((platformId) => {
-            console.log('Added routeIds : ' + routeIds.map((routeId) => {
+            console.log('LOG (db s.) Added routeIds : [ ' + routeIds.map((routeId) => {
                 return routeId;
               })
-                .join(',') + ' for platform' + platformId + 'to IDB for ' +
-              'overpass API \'s response of :' + id);
+                .join(',') + ' ] for platform with id : ' + platformId + 'to IDB for ' +
+              'Overpass API \'s response of :' + id);
           }).catch((err) => {
-            console.log('Could not add routeIds for platform to IDB ' +
+            console.log('LOG (db s.) Error in adding routeIds for platform to IDB ' +
               'for overpass API \'s response of :' + id);
+            /* transaction will not be aborted and previous operations will not be
+            rolled back as error is caught */
             console.log(err);
           });
         }
-        this.storageSrv.completelyDownloadedPlatformsIDB.add(id);
-        this.addToCompletelyDownloadedPlatforms(id).then(() => {
-          console.log('Added platform with id : ' + id + ' to completely downloaded platforms in IDB ' +
+        this.db.CompletelyDownloadedPlatforms.put({ id }).then(() => {
+          this.storageSrv.completelyDownloadedPlatformsIDB.add(id);
+          console.log('LOG (db s.) Added platform with id : ' + id + ' to completely downloaded platforms in IDB ' +
             'for overpass API \'s response of : ' + id);
         }).catch((err) => {
-          console.log('Could not add platform with id : ' + id + ' to completely downloaded platforms ' +
+          console.log('LOG (db s.) Error in adding platform with id : ' + id + ' to completely downloaded platforms ' +
             'in IDB for overpass API \'s response of :' + id);
+          /* transaction will not be aborted and previous operations will not be
+          rolled back as error is caught */
           console.log(err);
         });
       }
       if (type === 'route') {
-        this.storageSrv.completelyDownloadedRoutesIDB.add(id);
-        this.addToCompletelyDownloadedRoutes(id).then(() => {
-          console.log('Added route with id :' + id + ' to completely downloaded routes in' +
+        this.db.CompletelyDownloadedRoutes.put({ id }).then(() => {
+          this.storageSrv.completelyDownloadedRoutesIDB.add(id);
+          console.log('LOG (db s.) Added route with id :' + id + ' to completely downloaded routes in' +
             ' IDB for overpass API \'s response of :' + id);
         }).catch((err) => {
-          console.log('Could not add route with id : ' + id + ' to completely downloaded routes in IDB' +
+          console.log('LOG (db s.) Error in adding route with id : ' + id + ' to completely downloaded routes in IDB' +
             ' for overpass API \'s response of' + id);
+          /* transaction will not be aborted and previous operations will not be
+          rolled back as error is caught */
           console.log(err);
         });
       }
-    }).catch((err) => {
-      console.log('Could not complete transaction successfully for addition of overpass API \'s response of' + id +
-        ', All previous additions for this transaction will be rolled back');
-      console.log(err);
     });
   }
 
@@ -330,16 +304,9 @@ export class DataService {
       let routesObject = {
         elements: filteredMasters,
       };
-      console.log('made routes object');
       console.log(routesObject);
       return Promise.resolve(routesObject);
     });
   }
-  addToQueriedRoutesforMasters(routeIds: Array<number>): any {
-    return this.db.transaction('rw', this.db.QueriedRoutesforMasters, () => {
-      routeIds.forEach((routeId) => {
-        return this.db.QueriedRoutesforMasters.put({ id: routeId });
-      });
-    });
-  }
+
 }

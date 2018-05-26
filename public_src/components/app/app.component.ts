@@ -17,7 +17,7 @@ import { ToolbarComponent } from '../toolbar/toolbar.component';
 
 import { IAppState } from '../../store/model';
 import { AppActions } from '../../store/app/actions';
-import { DataService } from '../../services/data.service';
+import { DbService } from '../../services/db.service';
 import { StorageService } from '../../services/storage.service';
 
 @Component({
@@ -45,7 +45,7 @@ export class AppComponent {
     private loadSrv: LoadService,
     private mapSrv: MapService,
     private processSrv: ProcessService,
-    private dataSrv: DataService,
+    private dataSrv: DbService,
     private storageSrv: StorageService,
   ) {
     if (isDevMode()) {
@@ -118,6 +118,15 @@ export class AppComponent {
       console.log('Could not get ids of completely downloaded routes stored in IDB');
       console.log(err);
     });
+    this.dataSrv.getIdsQueriedRoutesForMaster().then((keys) => {
+      this.storageSrv.getIdsQueriedRoutesForMaster  = new Set(keys.map((item) => item));
+      console.log('(app component) ids of completely downloaded  routes in IDB');
+      console.log(this.storageSrv.getIdsQueriedRoutesForMaster);
+    }).catch((err) => {
+      console.log('Could not get ids of completely downloaded routes stored in IDB');
+      console.log(err);
+    });
+
 
 
     const map = L.map('map', {
