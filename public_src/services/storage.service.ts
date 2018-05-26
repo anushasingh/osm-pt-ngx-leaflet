@@ -53,7 +53,7 @@ export class StorageService {
   public completelyDownloadedPlatformsIDB = new Set();
   public completelyDownloadedMasterRoutesIDB = new Set();
   public queriedRoutesForMastersIDB = new Set();
-
+  public idbMsg: EventEmitter<string> = new EventEmitter();
 
   constructor() {
     this.currentElementsChange.subscribe((data) => {
@@ -92,6 +92,10 @@ export class StorageService {
     };
     this.stats.emit(stats);
   }
+
+  // public logidbMsg(msg): void {
+  //   this.idbMsg.emit.
+  // }
 
   public clearRouteData(): void {
     this.stopsForRoute = [];

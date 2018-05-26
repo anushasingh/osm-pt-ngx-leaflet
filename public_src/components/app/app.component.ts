@@ -54,46 +54,46 @@ export class AppComponent {
   }
 
   public ngOnInit(): any {
-    this.dataSrv.getIdsPlatformsIDB().then((keys) => {
-      this.storageSrv.platformsIDB  = new Set(keys.map((item) => item));
-      console.log('(app component) ids of platforms in IDB');
-      console.log(this.storageSrv.platformsIDB);
-    }).catch((err) => {
-      console.log('Could not get ids of platforms stored in IDB');
-      console.log(err);
-    });
-    this.dataSrv.getIdsStopsIDB().then((keys) => {
-      this.storageSrv.stopsIDB  = new Set(keys.map((item) => item));
-      console.log('(app component) ids of stops in IDB');
-      console.log(this.storageSrv.stopsIDB);
-    }).catch((err) => {
-      console.log('Could not get ids of stops stored in IDB');
-      console.log(err);
-    });
-    this.dataSrv.getIdsRoutesIDB().then((keys) => {
-      this.storageSrv.routesIDB  = new Set(keys.map((item) => item));
-      console.log('(app component) ids of routes in IDB');
-      console.log(this.storageSrv.routesIDB);
-    }).catch((err) => {
-      console.log('Could not get ids of routes stored in IDB');
-      console.log(err);
-    });
-    this.dataSrv.getIdsMasterRoutesIDB().then((keys) => {
-      this.storageSrv.routeMastersIDB  = new Set(keys.map((item) => item));
-      console.log('(app component) ids of routes in IDB');
-      console.log(this.storageSrv.routeMastersIDB);
-    }).catch((err) => {
-      console.log('Could not get ids of route masters stored in IDB');
-      console.log(err);
-    });
-    this.dataSrv.getIdsWaysIDB().then((keys) => {
-      this.storageSrv.waysIDB  = new Set(keys.map((item) => item));
-      console.log('(app component) ids of ways in IDB');
-      console.log(this.storageSrv.waysIDB);
-    }).catch((err) => {
-      console.log('Could not get ids of ways stored in IDB');
-      console.log(err);
-    });
+    // this.dataSrv.getIdsPlatformsIDB().then((keys) => {
+    //   this.storageSrv.platformsIDB  = new Set(keys.map((item) => item));
+    //   console.log('(app component) ids of platforms in IDB');
+    //   console.log(this.storageSrv.platformsIDB);
+    // }).catch((err) => {
+    //   console.log('Could not get ids of platforms stored in IDB');
+    //   console.log(err);
+    // });
+    // this.dataSrv.getIdsStopsIDB().then((keys) => {
+    //   this.storageSrv.stopsIDB  = new Set(keys.map((item) => item));
+    //   console.log('(app component) ids of stops in IDB');
+    //   console.log(this.storageSrv.stopsIDB);
+    // }).catch((err) => {
+    //   console.log('Could not get ids of stops stored in IDB');
+    //   console.log(err);
+    // });
+    // this.dataSrv.getIdsRoutesIDB().then((keys) => {
+    //   this.storageSrv.routesIDB  = new Set(keys.map((item) => item));
+    //   console.log('(app component) ids of routes in IDB');
+    //   console.log(this.storageSrv.routesIDB);
+    // }).catch((err) => {
+    //   console.log('Could not get ids of routes stored in IDB');
+    //   console.log(err);
+    // });
+    // this.dataSrv.getIdsMasterRoutesIDB().then((keys) => {
+    //   this.storageSrv.routeMastersIDB  = new Set(keys.map((item) => item));
+    //   console.log('(app component) ids of routes in IDB');
+    //   console.log(this.storageSrv.routeMastersIDB);
+    // }).catch((err) => {
+    //   console.log('Could not get ids of route masters stored in IDB');
+    //   console.log(err);
+    // });
+    // this.dataSrv.getIdsWaysIDB().then((keys) => {
+    //   this.storageSrv.waysIDB  = new Set(keys.map((item) => item));
+    //   console.log('(app component) ids of ways in IDB');
+    //   console.log(this.storageSrv.waysIDB);
+    // }).catch((err) => {
+    //   console.log('Could not get ids of ways stored in IDB');
+    //   console.log(err);
+    // });
     this.dataSrv.getIdsCompletelyDownloadedStops().then((keys) => {
       this.storageSrv.completelyDownloadedStopsIDB  = new Set(keys.map((item) => item));
       console.log('(app component) ids of completely downloaded  stops in IDB');

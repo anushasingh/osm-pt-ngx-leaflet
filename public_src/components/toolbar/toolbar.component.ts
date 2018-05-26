@@ -30,7 +30,7 @@ export class ToolbarComponent {
 
   public currentElement: IOsmElement;
   public stats = { s: 0, r: 0, a: 0, m: 0 };
-
+  public idbMsg;
   constructor(
     private confSrv: ConfService,
     private mapSrv: MapService,
@@ -50,6 +50,8 @@ export class ToolbarComponent {
       }
     });
     this.storageSrv.stats.subscribe((data) => (this.stats = data));
+    this.storageSrv.idbMsg.subscribe((data) => (this.idbMsg = data));
+
     this.mapSrv.highlightTypeEmitter.subscribe((data) => {
       this.htRadioModel = data.highlightType;
     });

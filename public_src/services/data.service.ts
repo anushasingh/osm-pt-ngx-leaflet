@@ -10,31 +10,31 @@ export class DataService {
   constructor(private storageSrv: StorageService) {
     this.db = new Db();
   }
-  // these are never used?
-  /* fetches the array of ids of platforms stored in IDB */
-  getIdsPlatformsIDB(): any {
-    return this.db.PtPlatforms.toCollection().primaryKeys();
-  }
-
-  /* fetches the array of ids of stops stored in IDB */
-  getIdsStopsIDB(): any {
-    return this.db.PtStops.toCollection().primaryKeys();
-  }
-
-  /* fetches the array of ids of routes stored in IDB */
-  getIdsRoutesIDB(): any {
-    return this.db.PtRoutes.toCollection().primaryKeys();
-  }
-
-  /* fetches the array of ids of master routes stored in IDB  */
-  getIdsMasterRoutesIDB(): any {
-    return this.db.PtRouteMasters.toCollection().primaryKeys();
-  }
-
-  /* fetches the array of ids of ways stored in IDB */
-  getIdsWaysIDB(): any {
-    return this.db.PtWays.toCollection().primaryKeys();
-  }
+  // // these are never used?
+  // /* fetches the array of ids of platforms stored in IDB */
+  // getIdsPlatformsIDB(): any {
+  //   return this.db.PtPlatforms.toCollection().primaryKeys();
+  // }
+  //
+  // /* fetches the array of ids of stops stored in IDB */
+  // getIdsStopsIDB(): any {
+  //   return this.db.PtStops.toCollection().primaryKeys();
+  // }
+  //
+  // /* fetches the array of ids of routes stored in IDB */
+  // getIdsRoutesIDB(): any {
+  //   return this.db.PtRoutes.toCollection().primaryKeys();
+  // }
+  //
+  // /* fetches the array of ids of master routes stored in IDB  */
+  // getIdsMasterRoutesIDB(): any {
+  //   return this.db.PtRouteMasters.toCollection().primaryKeys();
+  // }
+  //
+  // /* fetches the array of ids of ways stored in IDB */
+  // getIdsWaysIDB(): any {
+  //   return this.db.PtWays.toCollection().primaryKeys();
+  // }
 
   /* fetches the array of ids of completely downloaded stops stored in IDB*/
   getIdsCompletelyDownloadedStops(): any {
@@ -69,7 +69,6 @@ export class DataService {
   }
 
   addToCompletelyDownloadedRoutes(routeId: number): any {
-    console.log('trying to add' + routeId);
     return this.db.CompletelyDownloadedRoutes.put({ id: routeId });
   }
   getRoutesForStop(stopId: number): any {
@@ -163,11 +162,14 @@ export class DataService {
 
       if (platforms.length !== 0) {
         this.db.PtPlatforms.bulkPut(platforms).then(() => {
-          console.log('Added platforms : ' + platforms.map((platform) => {
+          // this.storageSrv.idbMsg.emit('Added platforms : [ ' + platforms.map((platform) => {
+          //   return platform.id;
+          // }).join(',') + ' ] to IDB for overpass API \'s response of :' + id);
+          console.log('Added platforms : [ ' + platforms.map((platform) => {
             return platform.id;
-          }).join(',') + ' to IDB for overpass API \'s response of :' + id);
+          }).join(',') + ' ] to IDB for overpass API \'s response of :' + id);
         }).catch((err) => {
-          console.log('error in adding platforms to idb');
+          console.log('Error in adding platforms to IDB');
           console.log(err);
           throw err;
         });

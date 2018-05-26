@@ -47,16 +47,16 @@ export class OverpassService {
       /*Checks if node was downloaded earlier and all it's data was added to IDB */
       if (this.storageSrv.completelyDownloadedPlatformsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        console.log('overpass ser.) platform with id ' + featureId + 'in IDB');
+        console.log('overpass ser.) Platform with id ' + featureId + 'in IDB');
         this.getPlatformDataIDB(featureId);
       } else if (this.storageSrv.completelyDownloadedStopsIDB.has(featureId)) {
       /*Gets the data from IDB and processes it (updates listOfStops etc.)*/
-        console.log('(overpass ser.) stop with id ' + featureId + 'in IDB');
+        console.log('(overpass ser.) Stop with id ' + featureId + 'in IDB');
         this.getStopDataIDB(featureId);
       }
       else {
         if (!this.storageSrv.elementsDownloaded.has(featureId) && featureId > 0) {
-          console.log('(overpass ser.) stop/platform with id ' + featureId + 'was not in idb, hence overpass query ' +
+          console.log('(overpass ser.) Stop/Platform with id ' + featureId + 'was not in idb, hence overpass query ' +
             'is made');
           this.getNodeDataOverpass(featureId, true);
           this.storageSrv.elementsDownloaded.add(featureId);
@@ -151,7 +151,6 @@ export class OverpassService {
    * @minNumOfRelations: number
    */
   public getRouteMasters(minNumOfRelations?: number): void {
-    console.log('getroutemasters');
     if (!minNumOfRelations) {
       minNumOfRelations = 10;
     }
@@ -165,8 +164,6 @@ export class OverpassService {
     // filter ids which are already in IDB, then process amd add to queried
     // overpass api for remaining
     if (idsArr.length <= minNumOfRelations) {
-      console.log(idsArr.length);
-      console.log(minNumOfRelations);
       this.loadSrv.hide();
       return console.log(
         'LOG (overpass s.) Not enough relations to download - stop',
