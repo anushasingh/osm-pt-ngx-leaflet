@@ -16,6 +16,7 @@ import { IOverpassResponse } from '../core/overpassResponse.interface';
 import { IAppState } from '../store/model';
 import { AppActions } from '../store/app/actions';
 import { DataService } from './data.service';
+// import { OverpassService } from './overpass.service';
 
 @Injectable()
 export class ProcessService {
@@ -38,6 +39,7 @@ export class ProcessService {
     private mapSrv: MapService,
     private storageSrv: StorageService,
     private dataservice: DataService,
+    // private overpassSrv: OverpassService,
 
   ) {
     // this.mapSrv.popupBtnClick.subscribe(
@@ -137,7 +139,39 @@ export class ProcessService {
    * @param response
    */
   public processNodeResponse(response: any): void {
+    console.log('process node response');
+    console.log(response);
     for (const element of response.elements) {
+      if (!this.storageSrv.elementsMap.has(element.id)) {
+        this.storageSrv.elementsMap.set(element.id, element);
+        if (!element.tags) {
+          continue;
+        }
+        switch (element.type) {
+          case 'node':
+            this.storageSrv.elementsDownloaded.add(element.id);
+            if (element.tags.bus === 'yes' || element.tags.public_transport) {
+              this.storageSrv.listOfStops.push(element);
+            }
+            break;
+          case 'relation':
+
+            if (element.tags.public_transport === 'stop_area') {
+              this.storageSrv.listOfAreas.push(element);
+            } else {
+              this.storageSrv.listOfRelations.push(element);
+            }
+        }
+      }
+    }
+    this.storageSrv.logStats();
+    console.log('finish process node response');
+  }
+
+  public processRelationResponse(response: any): void {
+    console.log('process node response');
+    console.log(response);
+    for (const element of response) {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         this.storageSrv.elementsMap.set(element.id, element);
         if (!element.tags) {
@@ -178,6 +212,7 @@ export class ProcessService {
    * @param response
    */
   public processMastersResponse(response: object): void {
+    let masterRoutes = [];
     response['elements'].forEach((element) => {
       if (!this.storageSrv.elementsMap.has(element.id)) {
         console.log('LOG (processing s.) New element added:', element);
@@ -185,17 +220,17 @@ export class ProcessService {
         this.storageSrv.elementsDownloaded.add(element.id);
         if (element.tags.route_master) {
           this.storageSrv.listOfMasters.push(element);
-          // add to IDB table masters
-          this.dataservice.addRouteMaster(element).then(
-            (routeMasterId) => {
-              this.storageSrv.routeMastersIDB.add(routeMasterId);
-            }).catch((err) => {
-              console.log(err);
-          });
+          // add to IDB
+          masterRoutes.push(element);
         } else {
           console.log('LOG (processing s.) WARNING: new elements? ', element);
         } // do not add other relations because they should be already added
       }
+    });
+
+    this.dataservice.addRouteMasters(masterRoutes).catch((err) => {
+        console.log('Not able to add some master routes to IDB');
+        console.log(err);
     });
     console.log(
       'LOG (processing s.) Total # of master rel. (route_master)',
@@ -349,6 +384,7 @@ export class ProcessService {
       'platform_entry_only',
     ];
     // skip for new (created) relations
+    // get missing elements array
     if (rel.id > 0) {
       rel['members'].forEach((member) => {
         if (
@@ -364,8 +400,9 @@ export class ProcessService {
     if (
       !this.storageSrv.elementsDownloaded.has(rel.id) &&
       rel['members'].length > 0 &&
-      missingElements.length > 0
+      missingElements.length > 0 && !this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)
     ) {
+      console.log('Route not in JS, not in IDB,has some members, and has missing members');
       console.log(
         'LOG (processing s.) Relation is not completely downloaded. Missing: ' +
           missingElements.join(', '),
@@ -379,10 +416,14 @@ export class ProcessService {
       (missingElements.length === 0 && rel.id > 0) ||
       (rel.id < 0 && rel['members'].length > 0)
     ) {
+      console.log('(Route in JS) or (no missing elements & old) or (new & has some members)');
       console.log('podminka plati', rel.id, rel['members'].length);
       this.downloadedMissingMembers(rel, true, zoomToElement);
-    } else if (rel.id < 0) {
       this.refreshTagView(rel);
+    } else if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)) {
+      console.log('Route in IDB');
+      // will have empty missing elements array
+      this.getRelationDataIDB(rel);
     } else {
       return alert(
         'FIXME: Some other problem with relation - downloaded ' +
@@ -622,6 +663,25 @@ export class ProcessService {
 
   public numIsBetween(num: number, min: number, max: number): boolean {
     return min < num && num < max;
+  }
+  public getRelationDataIDB(rel: any): any {
+     this.dataservice.getMembersForRoute(rel.id).then((res) => {
+       this.processNodeResponse(res);
+       console.log('1');
+       const transformedGeojson = this.mapSrv.osmtogeojson(res);
+       console.log('2');
+       this.storageSrv.localGeojsonStorage = transformedGeojson;
+       console.log('3');
+       this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
+       console.log('4');
+       this.storageSrv.elementsDownloaded.add(rel.id);
+       console.log('5');
+       this.downloadedMissingMembers(rel, true, true);
+       console.log('6');
+    }).catch((err) => {
+      console.log('Error in fetching and displaying the data ')
+      console.log(err);
+    });
   }
 
 }

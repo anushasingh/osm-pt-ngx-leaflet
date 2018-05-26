@@ -51,6 +51,9 @@ export class StorageService {
   public completelyDownloadedRoutesIDB = new Set();
   public completelyDownloadedStopsIDB = new Set();
   public completelyDownloadedPlatformsIDB = new Set();
+  public completelyDownloadedMasterRoutesIDB = new Set();
+  public queriedRoutesForMastersIDB = new Set();
+
 
   constructor() {
     this.currentElementsChange.subscribe((data) => {

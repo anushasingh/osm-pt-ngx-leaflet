@@ -95,7 +95,7 @@ export class OverpassService {
       // get from IDB, else overpass query
       if (this.storageSrv.completelyDownloadedRoutesIDB.has(rel.id)) {
         console.log('Route already in IDB');
-        this.getRelationDataIDB(rel);
+        this.processSrv.getRelationDataIDB(rel);
       } else {
         console.log('Route not already in IDB');
         this.getRelationData(rel, missingElements);
@@ -151,6 +151,7 @@ export class OverpassService {
    * @minNumOfRelations: number
    */
   public getRouteMasters(minNumOfRelations?: number): void {
+    console.log('getroutemasters');
     if (!minNumOfRelations) {
       minNumOfRelations = 10;
     }
@@ -161,20 +162,60 @@ export class OverpassService {
       }
     }, 7500);
     const idsArr: Array<number> = this.findRouteIdsWithoutMaster();
+    // filter ids which are already in IDB, then process amd add to queried
+    // overpass api for remaining
     if (idsArr.length <= minNumOfRelations) {
+      console.log(idsArr.length);
+      console.log(minNumOfRelations);
       this.loadSrv.hide();
       return console.log(
         'LOG (overpass s.) Not enough relations to download - stop',
       );
     } else if (!idsArr.length) {
       // do not query masters if all relations are already known
+      console.log('no missing routes');
+      console.log(idsArr);
       this.loadSrv.hide();
       return;
     }
+
+    const routesNotInIDB:  Array<number> = [];
+    const routesInIDB:  Array<number> = [];
+
+    idsArr.forEach((id) => {
+      if (this.storageSrv.queriedRoutesForMastersIDB.has(id)) {
+
+        routesInIDB.push(id);
+      }
+      else {
+        routesNotInIDB.push(id);
+      }
+    });
+    // wrong
+    if (routesInIDB.length !== 0) {
+      console.log('some routes in IDB');
+    // wrong
+      this.dataSrv.getRoutesForMasterRoute(routesInIDB).then((res) => {
+        console.log('got this for Idb');
+        console.log(res);
+        this.markQueriedRelations(routesInIDB);
+        this.processSrv.processMastersResponse(res);
+        }).catch((err) => {
+        console.log('Error in fetching routes from IDB');
+        console.log(err);
+      });
+    }
+    // if (!routesNotInIDB.length) {
+    //   console.log(idsArr);
+    //   console.log(routesInIDB);
+    //   console.log(routesNotInIDB);
+    //   console.log('all in idb, nothing to get from overpass');
+    //   return;
+    // }
     let requestBody: string = `
             [out:json][timeout:25][bbox:{{bbox}}];
             (
-              rel(id:${idsArr.join(', ')});
+              rel(id:${routesNotInIDB.join(', ')});
               <<;
             );
             out meta;`;
@@ -193,7 +234,13 @@ export class OverpassService {
               'No response from API. Try to select other master relation again please.',
             );
           }
+          console.log('master query response');
+          console.log(res);
           this.markQueriedRelations(idsArr);
+          this.dataSrv.addToQueriedRoutesforMasters(idsArr).then(() => {
+            console.log('Added routes to queried routes in IDB');
+            console.log(idsArr);
+          });
           this.processSrv.processMastersResponse(res);
         },
         (err) => {
@@ -278,10 +325,16 @@ export class OverpassService {
             return alert('No response from API. Try to select element again please.');
           }
           console.log('LOG (overpass s.)', res);
+          // fix when not processed, not added to elements map: fix
           if (process) {
             this.processSrv.processNodeResponse(res);
             this.loadSrv.hide();
             this.getRouteMasters(10);
+          } else {
+            for (const element of res['elements']) {
+              if (!this.storageSrv.elementsMap.has(element.id)) {
+                this.storageSrv.elementsMap.set(element.id, element); }
+          }
           }
           if (res['elements'][0]) {
             this.dataSrv.addResponseToIDB(res, featureId, res['elements'][0].tags.public_transport);
@@ -340,7 +393,8 @@ export class OverpassService {
           );
           this.storageSrv.elementsDownloaded.add(rel.id);
           this.processSrv.downloadedMissingMembers(rel, true, true);
-          this.dataSrv.addResponseToIDB(res, false, 'route');
+          this.dataSrv.addResponseToIDB(res, rel.id, 'route');
+          console.log('finish get relation data');
         },
         (err) => {
           throw new Error(err);
@@ -693,25 +747,5 @@ export class OverpassService {
       console.log(err);
     });
   }
-  public getRelationDataIDB(rel: any): any {
 
-    this.dataSrv.getMembersForRoute(rel.id).then((res) => {
-
-    this.processSrv.processNodeResponse(res);
-
-    const transformedGeojson = this.mapSrv.osmtogeojson(res);
-    this.storageSrv.localGeojsonStorage = transformedGeojson;
-    this.mapSrv.renderTransformedGeojsonData(transformedGeojson);
-
-    // continue with the rest of "exploreRelation" function
-    console.log(
-      'LOG (overpass s.) Continue with downloaded missing members',
-      rel,
-    );
-    this.storageSrv.elementsDownloaded.add(rel.id);
-    this.processSrv.downloadedMissingMembers(rel, true, true);
-   }).catch((err) => {
-      console.log(err);
-    });
-  }
 }

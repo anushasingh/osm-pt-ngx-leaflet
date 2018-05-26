@@ -7,16 +7,17 @@ import { IPtRelationNew } from '../core/ptRelationNew.interface';
 import { IPtRouteMasterNew } from '../core/ptRouteMasterNew.interface';
 import { IRoutesForStopIDB } from '../core/IDBinterfaces/RoutesForStop';
 export class Db extends Dexie {
-  PtStops:  Dexie.Table<IPtStop, string>;
-  PtPlatforms: Dexie.Table<IPtStop, string>;
-  PtRoutes: Dexie.Table<IPtRelationNew, string>;
-  PtRouteMasters: Dexie.Table<IPtRouteMasterNew, string>;
+  PtStops:  Dexie.Table<IPtStop, number>;
+  PtPlatforms: Dexie.Table<IPtStop, number>;
+  PtRoutes: Dexie.Table<IPtRelationNew, number>;
+  PtRouteMasters: Dexie.Table<IPtRouteMasterNew, number>;
   PtWays: Dexie.Table<IPtWay, number>;
-  CompletelyDownloadedStops: Dexie.Table<IDownloadedStops, string>;
-  CompletelyDownloadedPlatforms: Dexie.Table<IDownloadedStops, string>;
-  CompletelyDownloadedRoutes: Dexie.Table<IDownloadedRoutes, string>;
-  RoutesForStops: Dexie.Table<IRoutesForStopIDB, string>;
-  RoutesForPlatforms: Dexie.Table<IRoutesForStopIDB, string>;
+  CompletelyDownloadedStops: Dexie.Table<IDownloadedStops, number>;
+  CompletelyDownloadedPlatforms: Dexie.Table<IDownloadedStops, number>;
+  CompletelyDownloadedRoutes: Dexie.Table<IDownloadedRoutes, number>;
+  RoutesForStops: Dexie.Table<IRoutesForStopIDB, number>;
+  RoutesForPlatforms: Dexie.Table<IRoutesForStopIDB, number>;
+  QueriedRoutesforMasters: Dexie.Table<IDownloadedStops, number>;
   constructor() {
     super('Database');
     this.version(1).stores({
@@ -30,6 +31,7 @@ export class Db extends Dexie {
       CompletelyDownloadedRoutes: 'id',
       RoutesForPlatforms : '',
       RoutesForStops : '',
+      QueriedRoutesforMasters: 'id',
     });
   }
 }

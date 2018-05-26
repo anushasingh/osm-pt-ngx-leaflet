@@ -97,7 +97,7 @@ export class AppComponent {
     this.dataSrv.getIdsCompletelyDownloadedStops().then((keys) => {
       this.storageSrv.completelyDownloadedStopsIDB  = new Set(keys.map((item) => item));
       console.log('(app component) ids of completely downloaded  stops in IDB');
-      console.log(this.storageSrv.platformsIDB);
+      console.log(this.storageSrv.completelyDownloadedStopsIDB);
     }).catch((err) => {
       console.log('Could not get ids of completely downloaded stops stored in IDB');
       console.log(err);
@@ -113,7 +113,7 @@ export class AppComponent {
     this.dataSrv.getIdsCompletelyDownloadedRoutes().then((keys) => {
       this.storageSrv.completelyDownloadedRoutesIDB  = new Set(keys.map((item) => item));
       console.log('(app component) ids of completely downloaded  routes in IDB');
-      console.log(this.storageSrv.routesIDB);
+      console.log(this.storageSrv.completelyDownloadedRoutesIDB);
     }).catch((err) => {
       console.log('Could not get ids of completely downloaded routes stored in IDB');
       console.log(err);
