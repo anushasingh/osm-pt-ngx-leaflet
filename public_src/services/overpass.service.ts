@@ -315,10 +315,22 @@ export class OverpassService {
             return alert('No response from API. Try to select element again please.');
           }
           console.log('LOG (overpass s.)', res);
+          // console.log('LOG (overpass s.)', res);
+          // this.processSrv.processNodeResponse(res);
+          // if (!(this.ngRedux.getState()['app']['advancedExpMode'])) {
+          //   this.processSrv.filterRelationsByStop(this.storageSrv.elementsMap.get(featureId));
+          // } else {
+          //   this.getRouteMasters(10);
+          // }
+          // // TODO this.processSrv.drawStopAreas();
+          // this.warnSrv.showSuccess();
           if (process) {
             this.processSrv.processNodeResponse(res);
-            this.getRouteMasters(10);
-            // TODO this.processSrv.drawStopAreas();
+            if (!(this.ngRedux.getState()['app']['advancedExpMode'])) {
+              this.processSrv.filterRelationsByStop(this.storageSrv.elementsMap.get(featureId));
+            } else {
+              this.getRouteMasters(10);
+            }
           } else {
             // Only add to elements map and not update listOfStops etc. when process is equal to false
             for (const element of res['elements']) {
