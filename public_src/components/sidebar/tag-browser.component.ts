@@ -5,7 +5,7 @@ import {
   Input,
   OnInit,
 } from '@angular/core';
-import { select } from '@angular-redux/store';
+import { NgRedux, select } from '@angular-redux/store';
 
 import { Observable } from 'rxjs';
 
@@ -14,7 +14,10 @@ import { ProcessService } from '../../services/process.service';
 import { StorageService } from '../../services/storage.service';
 
 import { IOsmElement } from '../../core/osmElement.interface';
+
 import { PtTags } from '../../core/ptTags.class';
+import { ITagBrowserOptions } from '../../core/editingOptions.interfaces';
+import {IAppState} from '../../store/model';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Default,
@@ -29,18 +32,25 @@ import { PtTags } from '../../core/ptTags.class';
 export class TagBrowserComponent implements OnInit {
   @Input() public tagKey: string = '';
   @Input() public tagValue: string = '';
-  public currentElement: IOsmElement;
+  public currentElement: IOsmElement =  this.storageSrv.currentElement;
   public expectedKeys = PtTags.expectedKeys;
   public expectedValues = PtTags.expectedValues;
   @select(['app', 'editing']) public readonly editing$: Observable<boolean>;
+  @select(['app', 'advancedExpMode']) public readonly advancedExpMode$: Observable<boolean>;
+  @Input() tagBrowserOptions: ITagBrowserOptions;
+  public unfilledKeys = [];
+  private advancedExpModeSubscription: any;
+  private advancedExpMode: boolean;
 
   constructor(
     private cd: ChangeDetectorRef,
     private editSrv: EditService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    private ngRedux: NgRedux<IAppState>,
   ) {
-    //
+    this.advancedExpModeSubscription = ngRedux.select<boolean>(['app', 'advancedExpMode']) // <- New
+      .subscribe((data) => this.advancedExpMode = data);
   }
 
   public ngOnInit(): void {
@@ -54,11 +64,17 @@ export class TagBrowserComponent implements OnInit {
         );
         delete this.currentElement;
         this.currentElement = this.storageSrv.currentElement;
+        if (this.tagBrowserOptions.limitedKeys) {
+          this.unfilledKeys = this.getUnfilledKeys();
+        }
       } else if (data === 'cancel selection') {
         this.currentElement = undefined;
         delete this.currentElement;
       }
     });
+    if (this.tagBrowserOptions.limitedKeys) {
+      this.unfilledKeys = this.getUnfilledKeys();
+    }
   }
 
   private checkUnchanged(change: any): boolean {
@@ -150,22 +166,22 @@ export class TagBrowserComponent implements OnInit {
   }
 
   private toggleType(key: string): void {
-    let change;
-    if (Object.keys(this.currentElement.tags).indexOf(key) === -1) {
-      this.currentElement.tags[key] = 'yes';
-      change = { key, value: 'yes' };
-      this.editSrv.addChange(this.currentElement, 'add tag', change);
-    } else if (this.currentElement.tags[key] === 'yes') {
-      change = { key, value: this.currentElement.tags[key] };
-      delete this.currentElement.tags[key];
-      delete this.storageSrv.currentElement['tags'][key];
-      this.editSrv.addChange(this.currentElement, 'remove tag', change);
-    } else {
-      return alert(
-        'Problem occurred - unknown problem in toggle ' +
+      let change;
+      if (Object.keys(this.currentElement.tags).indexOf(key) === -1) {
+        this.currentElement.tags[key] = 'yes';
+        change = { key, value: 'yes' };
+        this.editSrv.addChange(this.currentElement, 'add tag', change);
+      } else if (this.currentElement.tags[key] === 'yes') {
+        change = { key, value: this.currentElement.tags[key] };
+        delete this.currentElement.tags[key];
+        delete this.storageSrv.currentElement['tags'][key];
+        this.editSrv.addChange(this.currentElement, 'remove tag', change);
+      } else {
+        return alert(
+          'Problem occurred - unknown problem in toggle ' +
           JSON.stringify(this.currentElement),
-      );
-    }
+        );
+      }
   }
 
   private updateValue(value: string): void {
@@ -183,4 +199,26 @@ export class TagBrowserComponent implements OnInit {
   private valueChange($event: any): void {
     console.log('LOG (tag-browser)', $event);
   }
+
+  /***
+   * Gets missing keys from allowed keys in beginnerMode
+   * @returns {any}
+   */
+  private getUnfilledKeys(): string[] {
+    if (this.currentElement) {
+      let existingKeys = Object.keys(this.currentElement.tags);
+      return this.tagBrowserOptions.allowedKeys.filter((key) => !existingKeys.includes(key));
+    }
+  }
+
+  /***
+   * Adds tag for beginnerMode
+   * @param {string} key
+   * @returns {any}
+   */
+  private addChangeBeginnerMode(key: string): any {
+    this.tagKey = key;
+    this.createChange('add tag');
+  }
+
 }
