@@ -50,7 +50,7 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
     private appActions: AppActions,
   ) {
     this.advancedExpModeSubscription = ngRedux.select<boolean>(['app', 'advancedExpMode']) // <- New
-      .subscribe((data) => this.advancedExpMode = data);    // <- New
+      .subscribe((data) => this.advancedExpMode = data);
   }
 
   public ngOnInit(): void {
@@ -144,12 +144,13 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
   private exploreAvailableRelation($event: any, rel: any): void {
     if (this.storageSrv.elementsDownloaded.has(rel.id)) {
       if (!this.advancedExpMode) {
-        this.processSrv.exploreRelation(
-          this.storageSrv.elementsMap.get(rel.id),
-          false,
-          false,
-          false,
-        );
+        // console.log('not');
+        // this.processSrv.exploreRelation(
+        //   this.storageSrv.elementsMap.get(rel.id),
+        //   false,
+        //   false,
+        //   false,
+        // );
       } else {
       this.processSrv.exploreRelation(
         this.storageSrv.elementsMap.get(rel.id),
@@ -230,9 +231,9 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
 
   /***
    * explores stop for beginner view (used for mouseout event for route list)
-   * @returns {any}
+   * @returns {void}
    */
-  private exploreStop(): any {
+  private exploreStop(): void {
     if (!this.advancedExpMode) {
       this.processSrv.exploreStop(this.storageSrv.currentElement, false, false, true);
     }

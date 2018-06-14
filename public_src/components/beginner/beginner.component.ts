@@ -31,34 +31,39 @@ export class BeginnerComponent {
   };
   public stopTagBrowserOptions: ITagBrowserOptions = {
     limitedKeys: true,
-    allowedKeys :  this.expectedKeys.filter(this.filterKeysForBeginner),
+    allowedKeys :  this.expectedKeys.filter(this.filterStopKeysForBeginner),
     makeKeysReadOnly : true,
   };
   public routeTagBrowserOptions: ITagBrowserOptions = {
-    limitedKeys: false,
+    limitedKeys: true,
+    allowedKeys :  this.expectedKeys.filter(this.filterRouteKeysForBeginner),
     makeKeysReadOnly : true,
   };
 
   constructor(private appActions: AppActions, private processSrv: ProcessService, private storageSrv: StorageService) {}
 
   /***
-   * Returns allowed keys (for tags) for beginner mode
+   * Returns allowed keys (for tags) for beginner mode stops
    * @param {string} key
    * @returns {boolean}
    */
-  private filterKeysForBeginner(key: string): boolean {
-    return key === 'name' || key === 'ref' ||
-      key === 'train' || key === 'subway' ||
-      key === 'monorail' || key === 'tram' ||
-      key === 'trolleybus' || key === 'bus' ||
-      key ===  'aerialway' || key ===  'ferry';
+  private filterStopKeysForBeginner(key: string): boolean {
+    return key === 'name' || key === 'ref' ;
+  }
+
+  /***
+   * Returns allowed keys (for tags) for beginner mode routes
+   * @param {string} key
+   * @returns {boolean}
+   */
+  private filterRouteKeysForBeginner(key: string): boolean {
+    return key === 'name' || key === 'ref' ;
   }
 
   /***
    * Refreshes view for back button functionality
    */
   private back(): void {
-    console.log('back');
     this.appActions.actSetBeginnerView('stop');
     this.storageSrv.currentElement = this.storageSrv.selectedStopBeginnerMode;
     this.processSrv.refreshSidebarView('tag');

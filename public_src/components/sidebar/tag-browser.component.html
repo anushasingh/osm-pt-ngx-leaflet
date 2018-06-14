@@ -83,7 +83,7 @@
         </td>
         <td>
           <ng-container *ngIf="!(editing$ | async)">{{tag.value}}</ng-container>
-          <input type="text" *ngIf="editing$ | async" value="{{tag.value}}" data-type="value"
+         <input type="text" *ngIf="editing$ | async" value="{{tag.value}}" data-type="value"
                  (blur)="createChange('change tag', tag.key, $event)" >
         </td>
         <td *ngIf="editing$ | async">
@@ -128,7 +128,7 @@
       <tr *ngFor="let key of unfilledKeys">
           <td>
           <input #k type="text" value = {{key}} readonly>
-        </td>
+          </td>
        <td>
           <input #v class="form-control" type="text" minlength="1"
                 placeholder="{{ 'Add new value' | translate }}"

@@ -5,7 +5,7 @@ import {
   Input,
   OnInit,
 } from '@angular/core';
-import { select } from '@angular-redux/store';
+import {NgRedux, select} from '@angular-redux/store';
 
 import { Observable } from 'rxjs';
 
@@ -17,6 +17,7 @@ import { IOsmElement } from '../../core/osmElement.interface';
 
 import { PtTags } from '../../core/ptTags.class';
 import { ITagBrowserOptions } from '../../core/editingOptions.interfaces';
+import {IAppState} from '../../store/model';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Default,
@@ -38,14 +39,18 @@ export class TagBrowserComponent implements OnInit {
   @select(['app', 'advancedExpMode']) public readonly advancedExpMode$: Observable<boolean>;
   @Input() tagBrowserOptions: ITagBrowserOptions;
   public unfilledKeys = [];
+  private advancedExpModeSubscription: any;
+  private advancedExpMode: boolean;
 
   constructor(
     private cd: ChangeDetectorRef,
     private editSrv: EditService,
     private processSrv: ProcessService,
     private storageSrv: StorageService,
+    private ngRedux: NgRedux<IAppState>,
   ) {
-    //
+    this.advancedExpModeSubscription = ngRedux.select<boolean>(['app', 'advancedExpMode']) // <- New
+      .subscribe((data) => this.advancedExpMode = data);
   }
 
   public ngOnInit(): void {
@@ -161,22 +166,22 @@ export class TagBrowserComponent implements OnInit {
   }
 
   private toggleType(key: string): void {
-    let change;
-    if (Object.keys(this.currentElement.tags).indexOf(key) === -1) {
-      this.currentElement.tags[key] = 'yes';
-      change = { key, value: 'yes' };
-      this.editSrv.addChange(this.currentElement, 'add tag', change);
-    } else if (this.currentElement.tags[key] === 'yes') {
-      change = { key, value: this.currentElement.tags[key] };
-      delete this.currentElement.tags[key];
-      delete this.storageSrv.currentElement['tags'][key];
-      this.editSrv.addChange(this.currentElement, 'remove tag', change);
-    } else {
-      return alert(
-        'Problem occurred - unknown problem in toggle ' +
+      let change;
+      if (Object.keys(this.currentElement.tags).indexOf(key) === -1) {
+        this.currentElement.tags[key] = 'yes';
+        change = { key, value: 'yes' };
+        this.editSrv.addChange(this.currentElement, 'add tag', change);
+      } else if (this.currentElement.tags[key] === 'yes') {
+        change = { key, value: this.currentElement.tags[key] };
+        delete this.currentElement.tags[key];
+        delete this.storageSrv.currentElement['tags'][key];
+        this.editSrv.addChange(this.currentElement, 'remove tag', change);
+      } else {
+        return alert(
+          'Problem occurred - unknown problem in toggle ' +
           JSON.stringify(this.currentElement),
-      );
-    }
+        );
+      }
   }
 
   private updateValue(value: string): void {
