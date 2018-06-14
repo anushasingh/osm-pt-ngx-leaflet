@@ -12,12 +12,14 @@ import { IRouteBrowserOptions, ITagBrowserOptions } from '../../core/editingOpti
   templateUrl: './expert.component.html',
 })
 export class ExpertComponent {
+
   public routeBrowserOptions: IRouteBrowserOptions = {
-    createRoute :  true,
+    createRoute:  true,
     changeMembers : true,
     membersEditing : true,
     toggleFilteredView :  true,
   };
+
   public tagBrowserOptions: ITagBrowserOptions = {
     limitedKeys: false,
     makeKeysReadOnly : false,

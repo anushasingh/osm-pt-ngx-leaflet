@@ -166,22 +166,22 @@ export class TagBrowserComponent implements OnInit {
   }
 
   private toggleType(key: string): void {
-      let change;
-      if (Object.keys(this.currentElement.tags).indexOf(key) === -1) {
-        this.currentElement.tags[key] = 'yes';
-        change = { key, value: 'yes' };
-        this.editSrv.addChange(this.currentElement, 'add tag', change);
-      } else if (this.currentElement.tags[key] === 'yes') {
-        change = { key, value: this.currentElement.tags[key] };
-        delete this.currentElement.tags[key];
-        delete this.storageSrv.currentElement['tags'][key];
-        this.editSrv.addChange(this.currentElement, 'remove tag', change);
-      } else {
-        return alert(
-          'Problem occurred - unknown problem in toggle ' +
-          JSON.stringify(this.currentElement),
-        );
-      }
+    let change;
+    if (Object.keys(this.currentElement.tags).indexOf(key) === -1) {
+      this.currentElement.tags[key] = 'yes';
+      change                        = {key, value: 'yes'};
+      this.editSrv.addChange(this.currentElement, 'add tag', change);
+    } else if (this.currentElement.tags[key] === 'yes') {
+      change = {key, value: this.currentElement.tags[key]};
+      delete this.currentElement.tags[key];
+      delete this.storageSrv.currentElement['tags'][key];
+      this.editSrv.addChange(this.currentElement, 'remove tag', change);
+    } else {
+      return alert(
+        'Problem occurred - unknown problem in toggle ' +
+        JSON.stringify(this.currentElement),
+      );
+    }
   }
 
   private updateValue(value: string): void {
