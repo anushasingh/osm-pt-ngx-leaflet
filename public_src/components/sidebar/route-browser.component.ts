@@ -143,15 +143,7 @@ export class RouteBrowserComponent implements OnInit, OnDestroy {
    */
   private exploreAvailableRelation($event: any, rel: any): void {
     if (this.storageSrv.elementsDownloaded.has(rel.id)) {
-      if (!this.advancedExpMode) {
-        // console.log('not');
-        // this.processSrv.exploreRelation(
-        //   this.storageSrv.elementsMap.get(rel.id),
-        //   false,
-        //   false,
-        //   false,
-        // );
-      } else {
+      if (this.advancedExpMode) {
       this.processSrv.exploreRelation(
         this.storageSrv.elementsMap.get(rel.id),
         true,

@@ -5,7 +5,7 @@ import {
   Input,
   OnInit,
 } from '@angular/core';
-import {NgRedux, select} from '@angular-redux/store';
+import { NgRedux, select } from '@angular-redux/store';
 
 import { Observable } from 'rxjs';
 
