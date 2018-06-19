@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { select } from '@angular-redux/store';
 import { Observable } from 'rxjs';
 import { AppActions } from '../../store/app/actions';
+import {SwitchLocationService} from '../../services/switch-location.service';
 
 @Component({
   selector: 'settings',
@@ -14,6 +15,7 @@ export class SettingsComponent {
 
   constructor(
     public appActions: AppActions,
+    private switchLocationSrv: SwitchLocationService,
   ) {
     //
   }
@@ -26,5 +28,8 @@ export class SettingsComponent {
   public changeExpMode(advancedExpMode: boolean): void {
     this.appActions.actSetAdvancedExpMode(advancedExpMode);
     localStorage.setItem('advancedMode', JSON.stringify(advancedExpMode));
+  }
+  private toggleSwitch() : void {
+    this.switchLocationSrv.switchlocationModeOn();
   }
 }

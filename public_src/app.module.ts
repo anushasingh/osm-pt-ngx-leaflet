@@ -63,6 +63,8 @@ import { RootEpics } from './store/epics';
 import { RavenErrorHandler } from './raven-error-handler';
 
 import { Utils } from './core/utils.class';
+import { SwitchLocationService } from './services/switch-location.service';
+import { SwitchLocationComponent } from './components/switch-location/switch-location.component';
 
 export function HttpLoaderFactory(http: HttpClient): any {
   return new TranslateHttpLoader(http);
@@ -91,6 +93,7 @@ const conditional_providers = [
     ToolbarComponent,
     TransporterComponent,
     SettingsComponent,
+    SwitchLocationComponent,
 
     KeysPipe,
   ],
@@ -137,6 +140,7 @@ const conditional_providers = [
     ProcessService,
     StorageService,
     WarnService,
+    SwitchLocationService,
 
     KeysPipe,
 

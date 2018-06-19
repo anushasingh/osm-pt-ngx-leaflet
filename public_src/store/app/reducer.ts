@@ -7,6 +7,7 @@ export const INITIAL_STATE: IAppState = {
   selectObject: null,
   advancedExpMode: false,
   goodConnectMode: false,
+  switchMode: false,
 };
 
 export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction): any {
@@ -30,6 +31,11 @@ export function appReducer(state: IAppState = INITIAL_STATE, action: AnyAction):
       return {
         ...state,
         goodConnectMode: action.payload,
+      };
+    case AppActions.TOGGLE_SWITCH_MODE:
+      return {
+        ...state,
+        switchMode: action.payload,
       };
     default:
       // We don't care about any other actions right now.
