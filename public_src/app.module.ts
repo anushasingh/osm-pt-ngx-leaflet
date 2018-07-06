@@ -3,13 +3,7 @@ import 'leaflet.vectorgrid';
 import 'reflect-metadata';
 import 'zone.js/dist/zone';
 import 'zone.js/dist/long-stack-trace-zone';
-// import 'leaflet-area-select';
-// import 'leaflet.path.drag';
-// import 'leaflet-editable';
-// import 'leaflet-shades';
 
-import { SwitchLocationService } from './services/switch-location.service';
-import { SwitchLocationComponent } from './components/switch-location/switch-location.component';
 import { APP_BASE_HREF } from '@angular/common';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
@@ -51,7 +45,6 @@ import { ValidationBrowserComponent } from './components/sidebar/validation-brow
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { TransporterComponent } from './components/transporter/transporter.component';
 import { ModalComponent } from './components/modal/modal.component';
-import { Modal2Component } from './components/modal2/modal2.component';
 
 import { AuthService } from './services/auth.service';
 import { ConfService } from './services/conf.service';
@@ -75,7 +68,6 @@ import { RootEpics } from './store/epics';
 import { RavenErrorHandler } from './raven-error-handler';
 
 import { Utils } from './core/utils.class';
-import {CorrectService} from './services/correct.service';
 
 export function HttpLoaderFactory(http: HttpClient): any {
   return new TranslateHttpLoader(http);
@@ -91,7 +83,7 @@ const conditional_providers = [
 
 @NgModule({
   bootstrap: [AppComponent],
-  entryComponents: [ModalComponent, Modal2Component],
+  entryComponents: [ModalComponent],
   declarations: [
     AppComponent,
     AuthComponent,
@@ -109,11 +101,9 @@ const conditional_providers = [
     SettingsComponent,
     ModalComponent,
     ValidationBrowserComponent,
-    SwitchLocationComponent,
 
     KeysPipe,
 
-    Modal2Component,
   ],
   imports: [
     AccordionModule.forRoot(),
@@ -159,8 +149,6 @@ const conditional_providers = [
     StorageService,
     WarnService,
     ErrorHighlightService,
-    SwitchLocationService,
-    CorrectService,
 
     KeysPipe,
 

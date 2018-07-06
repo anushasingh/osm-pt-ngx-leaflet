@@ -20,7 +20,6 @@ import * as MobileDetect from 'mobile-detect';
 export class ErrorHighlightService {
   modalRef: BsModalRef;
   public nameErrorsO: any[]                      = [];
-  public refErrorsO: any[]                       = [];
   public currentIndex                            = 0;
   public currentMode: string;
   public isDataDownloaded: EventEmitter<boolean> = new EventEmitter();
@@ -43,11 +42,6 @@ export class ErrorHighlightService {
         this.currentIndex =  this.storageSrv.currentIndex;
         this.nameErrorsO = this.storageSrv.nameErrorsO;
       }
-      if (data === 'missing ref') {
-        this.currentIndex =  this.storageSrv.currentIndex;
-        this.nameErrorsO = this.storageSrv.nameErrorsO;
-      }
-
     });
   }
 
@@ -59,7 +53,6 @@ export class ErrorHighlightService {
   public missingTagError(tag: string): void {
     this.storageSrv.currentIndex = 0;
     this.storageSrv.refreshErrorObjects.emit('missing ' + tag);
-    console.log('emitted' + 'missing ' + tag);
     this.currentMode = tag;
     this.mapSrv.popUpLayerGroup = null;
     this.mapSrv.popUpArr = [];
@@ -70,8 +63,6 @@ export class ErrorHighlightService {
     });
     if (tag === 'name') {
       this.switchlocationModeOn(true, this.nameErrorsO);
-    } else {
-      this.switchlocationModeOn(true, this.refErrorsO);
     }
   }
 
@@ -105,26 +96,9 @@ export class ErrorHighlightService {
           let suggestedNames   = this.getMostUsedName(arr);
           this.openModalWithComponent(stop, suggestedNames);
         }
-        if ((this.ngRedux.getState()['app']['errorCorrectionMode'] === 'missing ref tag')) {
-          console.log('got value', this.isMobileDevice());
-
-
-          // get suggestions
-
-          if (this.isMobileDevice()) {
-            // data was not completely download
-            this.openModalWithComponent(stop);
-          } else {
-            this.openModalWithComponent(stop);
-            // this.overpassSrv.downloadNodeDataForError(featureId);
-          }
-        }
-        // changing current element
         this.storageSrv.currentElementsChange.emit(
           JSON.parse(JSON.stringify(element)),
         );
-
-        this.refSuggestions2(latlng);
       }
       if (this.mapSrv.currentPopUpFeatureId && this.mapSrv.currentPopUpFeatureId !== popUpId &&
         this.mapSrv.getPopUpFromArray(this.mapSrv.currentPopUpFeatureId)) {
@@ -144,7 +118,6 @@ export class ErrorHighlightService {
    * @returns {void}
    */
   public openModalWithComponent(stop: any, suggestedNames?: string): void {
-    // name is suggested name
     if ((this.ngRedux.getState()['app']['errorCorrectionMode'] === 'missing name tag')) {
 
       if (suggestedNames) {
@@ -153,22 +126,15 @@ export class ErrorHighlightService {
           suggestedNames,
           errorObject: stop,
         };
-        this.modalRef      = this.modalService.show(ModalComponent, {initialState});
+        this.modalRef      = this.modalService.show(ModalComponent, { initialState });
       }
       else {
         const initialState = {
           error      : 'missing name tag',
           errorObject: stop,
         };
-        this.modalRef      = this.modalService.show(ModalComponent, {initialState});
+        this.modalRef      = this.modalService.show(ModalComponent, { initialState });
       }
-    } else
-    {
-      const initialState = {
-        error      : 'missing ref tag',
-        errorObject: stop,
-      };
-      this.modalRef      = this.modalService.show(ModalComponent, {initialState});
     }
   }
 
@@ -176,91 +142,17 @@ export class ErrorHighlightService {
    * Counts errors
    */
   public countErrors(): void {
-    console.log('count errors called');
-    this.refErrorsO = [];
     this.nameErrorsO = [];
     let count = 0;
     this.storageSrv.elementsMap.forEach((stop) => {
-      // console.log('next stop', stop);
-
-      // if (this.mapSrv.map.getBounds().contains(stop)){
-      //   count++;
-      // }
-
       if (stop.type === 'node' && (stop.tags.bus === 'yes' || stop.tags.public_transport)) {
         count ++;
         let errorObj = { stop, isCorrected: false };
         if (!stop.tags['name'] && this.mapSrv.map.getBounds().contains(stop)) {
-          // console.log('no name');
           this.nameErrorsO.push(errorObj);
         }
-
-        if (this.mapSrv.map.getBounds().contains(stop)) {
-
-          if (this.isMobileDevice()) {
-            let refErrorObj          = { stop, isCorrected: false };
-
-            if (!stop.tags['route_ref']) {
-              this.refErrorsO.push(refErrorObj);
-            }
-          } else {
-
-            if (stop.tags['route_ref']) {
-              console.log('stop', stop);
-              let parentRels = this.getParentRelations(stop.id);
-              console.log('parents', parentRels);
-              let addedRefs = this.getAlreadyAddedRefsInTag(stop.tags['route_ref']);
-              let missingRefs = this.compareRefs(parentRels, addedRefs);
-              // get missing refs
-              // and send them as suggestions
-              let refErrorObj          = { stop, isCorrected: false, missingRefs };
-
-              if (missingRefs.length !== 0) {
-                this.refErrorsO.push(refErrorObj);
-              }
-
-              this.getNearbyRefs()
-
-            } else {
-              let refErrorObj          = { stop, isCorrected: false };
-              this.refErrorsO.push(refErrorObj);
-            }
-          }
-          // if (stop.tags['route_ref']){
-          //   console.log('stop', stop);
-          //
-          //   let parentRels = this.getParentRelations(stop.id);
-          //   console.log('parents', parentRels);
-          //   let addedRefs = this.getAlreadyAddedRefsInTag(stop.tags['route_ref']);
-          //   let bool = this.compareRefs(parentRels, addedRefs);
-          //   if (!bool) {
-          //     this.refErrorsO.push(refErrorObj);
-          //   }
-          // } else {
-          //   this.refErrorsO.push(refErrorObj);
-          // }
-        }
       }
-
-      // console.log('stop', stop);
     });
-
-   //  console.log('ref errors', this.refErrorsO);
-   // console.log('in bounds', count);
-    // for (let stop of this.storageSrv.listOfStops) {
-    //   let stopObj2 = { stop, isCorrected: false };
-    //   let stopObj          = { lat: stop.lat, lng: stop.lon, id: stop.id, isCorrected : false };
-    //   if (!(this.storageSrv.elementsMap.get(stop.id).tags['ref']) &&
-    //     this.mapSrv.map.getBounds().contains(stopObj)) {
-    //
-    //     // let refs = this.getAlreadyAddedRefsInTag(this.storageSrv.elementsMap.get(stop.id).tags['route_ref']);
-    //     // download everything
-    //     // this.overpassSrv.download()
-    //     this.refErrorsO.push(stopObj);
-    //
-    //   }
-    // }
-    this.storageSrv.refErrorsO = this.refErrorsO;
     this.storageSrv.nameErrorsO =  this.nameErrorsO;
     this.storageSrv.refreshErrorObjects.emit('missing name');
     this.storageSrv.refreshErrorObjects.emit('missing ref');
@@ -270,55 +162,13 @@ export class ErrorHighlightService {
    * Checks whether on Mobile/Desktop
    * @returns {boolean}
    */
-  isMobileDevice(): boolean {
+  private isMobileDevice(): boolean {
     let md = new MobileDetect(window.navigator.userAgent);
     if (md.mobile()) {
       return true;
     } else {
       return false;
     }
-    // return (typeof window.orientation !== 'undefined') || (navigator.userAgent.indexOf('IEMobile') !== -1);
-  }
-
-  /***
-   * Starts correction based on error correction mode
-   * @param {string} tag
-   * @returns {void}
-   */
-  public startCorrection(tag: string): void {
-    this.currentIndex = 0;
-    this.currentMode = tag;
-    this.mapSrv.popUpLayerGroup = null;
-    this.mapSrv.popUpArr = [];
-    this.missingTagError(tag);
-    console.log('start correction mode set', this.currentMode);
-  }
-
-  /***
-   * Adds all popups at once
-   * @param {any[]} stopArray
-   * @returns {any}
-   */
-  addPopUps(stopArray: any[]): any {
-    this.mapSrv.removePopUps();
-    for (let stop of stopArray) {
-      let latlng       = { lat: stop.lat, lng: stop.lng };
-      let popupContent = ErrorHighlightService.makePopUpContent();
-      let popup        = L.popup({
-        autoClose   : false,
-        closeOnClick: false,
-        closeButton : false,
-        autoPan     : false,
-        minWidth    : 4,
-      }).setLatLng(latlng)
-        .setContent(popupContent)
-        .openOn(this.mapSrv.map);
-
-      this.mapSrv.popUpArr.push(popup);
-      // this.addClickListenerToPopUp(popup.getElement(), stop.id, popup['_leaflet_id']);
-      MapService.addHoverListenersToPopUp(popup.getElement());
-    }
-    this.mapSrv.popUpLayerGroup = L.layerGroup(this.mapSrv.popUpArr).addTo(this.mapSrv.map);
   }
 
   /***
@@ -338,10 +188,6 @@ export class ErrorHighlightService {
         this.addSinglePopUp(this.nameErrorsO[0]);
         this.mapSrv.map.setView(this.nameErrorsO[0]['stop'], 15);
       }
-      if (this.currentMode === 'ref') {
-        this.addSinglePopUp(this.refErrorsO[0]);
-        this.mapSrv.map.setView(this.refErrorsO[0]['stop'], 15);
-      }
       this.appActions.actToggleSwitchMode(bool);
     }
     this.mapSrv.map.invalidateSize();
@@ -354,9 +200,7 @@ export class ErrorHighlightService {
   nextLocation(): any {
     if (this.currentMode === 'name') {
       if (this.currentIndex === (this.nameErrorsO.length - 1)) {
-        // p dont need below line
           this.currentIndex = 0;
-
           this.storageSrv.currentIndex = 0;
           this.storageSrv.refreshErrorObjects.emit('missing name');
           this.addSinglePopUp(this.nameErrorsO[this.currentIndex]);
@@ -365,10 +209,7 @@ export class ErrorHighlightService {
           document.getElementById(this.nameErrorsO[this.currentIndex]['stop'].id).style.backgroundColor = 'lightblue';
 
       } else {
-        // p dont need below line
-
         this.currentIndex++;
-
         this.storageSrv.currentIndex ++;
         this.storageSrv.refreshErrorObjects.emit('missing name');
         this.addSinglePopUp(this.nameErrorsO[this.currentIndex]);
@@ -377,30 +218,7 @@ export class ErrorHighlightService {
         document.getElementById(this.nameErrorsO[this.currentIndex ]['stop'].id).style.backgroundColor = 'lightblue';
       }
     }
-    if (this.currentMode === 'ref') {
-      if (this.currentIndex === (this.refErrorsO.length - 1)) {
-        this.currentIndex = 0;
-
-        this.storageSrv.currentIndex = 0;
-        this.storageSrv.refreshErrorObjects.emit('missing ref');
-        this.addSinglePopUp(this.refErrorsO[this.currentIndex]);
-        this.mapSrv.map.setView(this.refErrorsO[this.currentIndex]['stop'], 15);
-        document.getElementById(this.refErrorsO[this.refErrorsO.length - 1]['stop'].id).style.backgroundColor = 'white';
-        document.getElementById(this.refErrorsO[this.currentIndex]['stop'].id).style.backgroundColor = 'lightblue';
-
-      } else {
-
-        this.currentIndex++;
-
-        this.storageSrv.currentIndex ++;
-        this.storageSrv.refreshErrorObjects.emit('missing ref');
-        this.addSinglePopUp(this.refErrorsO[this.currentIndex]);
-        this.mapSrv.map.setView(this.refErrorsO[this.currentIndex]['stop'], 15);
-        document.getElementById(this.refErrorsO[this.currentIndex - 1 ]['stop'].id).style.backgroundColor = 'white';
-        document.getElementById(this.refErrorsO[this.currentIndex ]['stop'].id).style.backgroundColor = 'lightblue';
-      }
-     }
-    }
+  }
 
   /***
    * Moves to previous location
@@ -435,37 +253,12 @@ export class ErrorHighlightService {
 
       }
     }
-    if (this.currentMode === 'ref') {
-      if (this.currentIndex === 0) {
-        this.currentIndex = this.refErrorsO.length - 1;
-        this.storageSrv.currentIndex = this.refErrorsO.length - 1;
-        this.storageSrv.refreshErrorObjects.emit('missing ref');
-        this.addSinglePopUp(this.refErrorsO[this.currentIndex]);
-        this.mapSrv.map.panTo(this.refErrorsO[this.currentIndex]['stop']);
-        document.getElementById(this.refErrorsO[0]['stop'].id).style.backgroundColor = 'white';
-        document.getElementById(this.refErrorsO[this.refErrorsO.length - 1]['stop'].id).style.backgroundColor = 'lightblue';
-      } else {
-        this.currentIndex--;
-
-        this.storageSrv.currentIndex--;
-
-        this.storageSrv.refreshErrorObjects.emit('missing ref');
-
-        this.addSinglePopUp(this.refErrorsO[this.currentIndex]);
-        // console.log('index',this.refErrorsO[this.currentIndex]);
-        this.mapSrv.map.panTo(this.refErrorsO[this.currentIndex]['stop']);
-        document.getElementById(this.refErrorsO[this.currentIndex + 1]['stop'].id).style.backgroundColor = 'white';
-        document.getElementById(this.refErrorsO[this.currentIndex]['stop'].id).style.backgroundColor = 'lightblue';
-      }
-    }
   }
 
   /***
    * Quits correction mode
    */
   public quit(): void {
-    // this.nameErrorsO = null;
-    // this.refErrorsO = null;
     document.getElementById('map').style.width     = '65%';
     document.getElementById('sidebar').style.width = '35%';
     this.mapSrv.map.invalidateSize();
@@ -519,29 +312,24 @@ export class ErrorHighlightService {
         maxCount = modeMap[el];
       }
     }
-
-   console.log('wholearr', array);
     const arr = [];
     arr[0] = modeMap;
     let sorted = Object.keys(arr[0]).sort((a, b) => arr[0][b] - arr[0][a]);
     sorted.forEach((x) => console.log(x + ': ' + arr[0][x]));
 
-    if (sorted.length > 5){
+    if (sorted.length > 5) {
       sorted =  sorted.slice(0, 5);
     }
-
     return sorted;
-    // return maxEl;
   }
 
   /***
    * Adds popup
-   * @param stop
+   * @param errorObj
    * @returns {any}
    */
   addSinglePopUp(errorObj: any): any {
      let stop =  errorObj['stop'];
-     // console.log('sd', errorObj['stop']);
      this.mapSrv.removePopUps();
      let latlng = { lat: stop.lat, lng: stop.lon };
      let popupContent;
@@ -559,7 +347,6 @@ export class ErrorHighlightService {
         minWidth    : 4,
       }).setLatLng(latlng)
         .setContent(popupContent).openOn(this.mapSrv.map);
-
      this.mapSrv.popUpArr.push(popup);
      this.addClickListenerToPopUp(popup.getElement(), stop.id, popup['_leaflet_id'], stop);
      MapService.addHoverListenersToPopUp(popup.getElement());
@@ -567,37 +354,8 @@ export class ErrorHighlightService {
      this.mapSrv.popUpLayerGroup.addLayer(popup);
   }
 
-  // suggest rout refs from nearby route
-  // get a nearby stop/platform, check it's parent routes and
-  // compare with already added route ref and add it to that
-  // take a route and suggest nearby stops
-  // suggestions based on stop’s nearby routes
-  // - user can quickly add other routes which can be connected)
-  public refSuggestions2 (latlngm: any): any {
-    console.log('latlng', latlngm);
-    let nearbyStopArr = [];
-    this.mapSrv.map.eachLayer((layer) => {
-       if (layer instanceof L.Marker) {
-         let m: L.Marker = layer;
-         if (m.getLatLng().distanceTo(latlngm) < 500) {
-           let id = this.mapSrv.getFeatureIdFromMarker(layer.feature);
-           nearbyStopArr.push(id);
-         }
-       }
-     });
-    // can use async await here
-    // this.overpassSrv.download(nearbyStopArr);
-
-    }
-
-  public getAlreadyAddedRefsInTag(routeRefTag: string): string[] {
-    console.log('tag',routeRefTag);
-    return  routeRefTag.split(';');
-  }
-
   /***
    * Returns all stops in current map bounds and which are not downloaded
-   * @param listOfStops
    * @returns {any[]}
    */
   public getAllStopsInCurrentBounds(): any[] {
@@ -610,20 +368,8 @@ export class ErrorHighlightService {
         inBounds.push(element.id);
       }
     });
-    console.log('in bounds', inBounds.length);
-      //   for (let stopObj of listOfStops) {
-      // if (this.mapSrv.map.getBounds().contains(stopObj) && !this.storageSrv.elementsDownloaded.has(stopObj.id)) {
-      // inBounds.push(stopObj.id);
-      // }
-    // }
     return inBounds;
   }
-  //
-  // public missingRefTag(): any {
-  //    // download all data
-  //   this.overpassSrv.download();
-  //
-  // }
 
   jumpToLocation(index: number): any {
     if ((this.ngRedux.getState()['app']['errorCorrectionMode'] === 'missing name tag')) {
@@ -635,64 +381,6 @@ export class ErrorHighlightService {
       this.mapSrv.map.setView(this.nameErrorsO[this.currentIndex]['stop'], 15);
       document.getElementById(this.nameErrorsO[this.currentIndex]['stop'].id).style.backgroundColor = 'lightblue';
     }
-    if ((this.ngRedux.getState()['app']['errorCorrectionMode'] === 'missing ref tag')) {
-      document.getElementById(this.refErrorsO[this.currentIndex]['stop'].id).style.backgroundColor = 'white';
-      this.currentIndex = index;
-      this.storageSrv.currentIndex = index;
-      this.storageSrv.refreshErrorObjects.emit('missing ref');
-      this.addSinglePopUp(this.refErrorsO[this.currentIndex]);
-      this.mapSrv.map.setView(this.refErrorsO[this.currentIndex]['stop'], 15);
-      document.getElementById(this.refErrorsO[this.currentIndex]['stop'].id).style.backgroundColor = 'lightblue';
     }
-    }
-
-  getParentRelations(id: any): any {
-    let parentRels = [];
-
-    this.storageSrv.elementsMap.forEach((element) => {
-      if ((element.type === 'relation') && !(element.tags.public_transport === 'stop_area')) {
-
-        if (element.members) {
-          for (let member of element.members) {
-            if(member.ref === id){
-              parentRels.push(element);
-            }
-          }
-        }
-      }
-    });
-    return parentRels;
-  }
-
-
-  compareRefs(parentRels: any, addedRefs: any): any {
-    let parentRefs = [];
-    let missingRefs = [];
-    for (let parent of parentRels) {
-      parentRefs.push(parent.tags.ref);
-    }
-
-    parentRefs = parentRefs.filter((val, ind) => { return parentRefs.indexOf(val) === ind; });
-
-    let flag = true;
-    for(let ref of parentRefs){
-
-      if (!addedRefs.includes(ref)){
-        flag = false;
-        missingRefs.push(ref);
-      }
-    }
-
-    return missingRefs;
-    
-  }
-
-  getNearbyRefs(latlngm: any): any {
-    this.storageSrv.elementsMap.forEach((element) => {
-      if (element.type === 'node' && (element.tags.bus === 'yes' || element.tags.public_transport)) {
-
-      }
-  }
 
 }
-
