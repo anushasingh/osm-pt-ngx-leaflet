@@ -563,7 +563,7 @@ export class EditService {
    * Binds events to created markers.
    * @param marker
    */
-  private createNewMarkerEvents(marker: any): void {
+  public createNewMarkerEvents(marker: any): void {
     marker.on('dragend', (event) => {
       this.repositionElement(marker, event);
     });
@@ -580,7 +580,7 @@ export class EditService {
    * @param {number} newId
    * @returns {any}
    */
-  private initializeNewMarker(
+  public initializeNewMarker(
     creatingElementOfType: string,
     event: any,
     newId: number,
@@ -613,7 +613,7 @@ export class EditService {
     return marker;
   }
 
-  private findNewId(): number {
+  public findNewId(): number {
     let newId: number = -1;
     while (this.storageSrv.elementsMap.has(newId) && newId > -100) {
       newId--;

@@ -10,7 +10,9 @@ import { WarnService } from '../../services/warn.service';
 import * as L from 'leaflet';
 
 import { IPtRelation } from '../../core/ptRelation.interface';
-import { INameErrorObject, IRefErrorObject, IWayErrorObject } from '../../core/errorObject.interface';
+import {INameErrorObject, IPTPairErrorObject, IRefErrorObject, IWayErrorObject} from '../../core/errorObject.interface';
+import {PtTags} from '../../core/ptTags.class';
+import {IPtStop} from '../../core/ptStop.interface';
 
 @Component({
   selector: 'modal-content',
@@ -31,6 +33,7 @@ export class ModalComponent {
   public nameErrorObject: INameErrorObject;
   public refErrorObject: IRefErrorObject;
   public wayErrorObject: IWayErrorObject;
+  public ptPairErrorObject: IPTPairErrorObject;
 
   public removedNearbySuggestions: any[]  = [];
   public removedMissingSuggestions: any[] = [];
@@ -43,6 +46,15 @@ export class ModalComponent {
   public nearbyRels: any[];
 
   public osmtogeojson: any = require('osmtogeojson');
+
+  public newPlatformLatLng = L.LatLng;
+
+  public platformTags = PtTags.expectedKeys;
+  public addedPlatformTagsValues = [];
+  public newAddedTagsForPlatform = new Map();
+  public newPlatformEvent;
+
+  public circleLayer = null;
 
   constructor(public bsModalRef: BsModalRef,
               private editSrv: EditService,
@@ -437,5 +449,68 @@ export class ModalComponent {
       }
     });
     return matchedLayer;
+  }
+
+  public addTagToPlatform(key: any, value: any): any{
+    this.newAddedTagsForPlatform.set(key, value);
+  }
+
+  public savePTPairError(): any{
+    let tags = {};
+    this.newAddedTagsForPlatform.forEach((tagValue, tagKey)=> {
+      tags['tagKey'] = tagValue;
+    });
+
+    this.addedPlatformTagsValues.forEach((val, i) =>{
+      tags[this.platformTags[i]] = val;
+    });
+
+
+    let newId: number = this.editSrv.findNewId();
+    const marker = this.editSrv.initializeNewMarker(
+      'platform',
+      this.newPlatformEvent,
+      newId,
+    );
+    this.editSrv.createNewMarkerEvents(marker);
+    this.storageSrv.markersMap.set(newId, marker);
+    marker.addTo(this.mapSrv.map);
+    const latlng = marker.getLatLng();
+    let newElement: IPtStop = {
+      changeset: -999,
+      id: newId,
+      lat: latlng.lat,
+      lon: latlng.lng,
+      tags,
+      timestamp: new Date().toISOString().split('.')[0] + 'Z',
+      type: 'node',
+      uid: Number(localStorage.getItem('id')),
+      user: localStorage.getItem('display_name'),
+      version: 1,
+    };
+    newElement.tags.public_transport = 'platform';
+    let change = { from: undefined, to: newElement };
+    this.editSrv.addChange(newElement, 'add element', change);
+
+    let stopLayer = null;
+    let stopId = this.ptPairErrorObject.stop.id;
+
+    this.mapSrv.map.eachLayer((layer) => {
+      if (layer['feature'] && layer['_latlng']) {
+        let featureID = this.mapSrv.getFeatureIdFromMarker(layer['feature']);
+        if (featureID === stopId) {
+          stopLayer = layer;
+        }
+      }
+    });
+    stopLayer.closePopup();
+    // this.mapSrv.map.off();
+    this.circleLayer.removeFrom(this.mapSrv.map);
+    this.ptPairErrorObject.corrected                                        = 'true';
+    this.storageSrv.ptPairErrorsObject[this.storageSrv.currentIndex].corrected = 'true';
+    this.storageSrv.refreshErrorObjects.emit({ typeOfErrorObject: 'pt-pair' });
+    this.warnSrv.showGenericSuccess();
+    this.bsModalRef.hide();
+
   }
 }

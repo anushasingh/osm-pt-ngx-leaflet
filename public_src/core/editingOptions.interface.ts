@@ -17,6 +17,13 @@ export interface ISuggestionsBrowserOptions {
   waySuggestions: ISuggestions;
 }
 
+export interface ISuggestionsBrowserOptions {
+  nameSuggestions: ISuggestions;
+  refSuggestions: ISuggestions;
+  waySuggestions: ISuggestions;
+  ptPairSuggestions: ISuggestions;
+}
+
 export interface ISuggestions {
   found: boolean;
   startCorrection: boolean;

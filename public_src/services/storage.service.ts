@@ -5,28 +5,28 @@ import { IOsmElement } from '../core/osmElement.interface';
 
 @Injectable()
 export class StorageService {
-  public elementsDownloaded = new Set();
-  public queriedMasters = new Set();
-  public elementsRendered = new Set();
-  public elementsMap = new Map();
-  public markersMap = new Map();
+  public elementsDownloaded  = new Set();
+  public queriedMasters      = new Set();
+  public elementsRendered    = new Set();
+  public elementsMap         = new Map();
+  public markersMap          = new Map();
   public elementsToHighlight = new Set();
 
-  public localJsonStorage: any = new Map();
-  public localGeojsonStorage: any = new Map();
-  public listOfStops: IPtStop[] = [];
+  public localJsonStorage: any     = new Map();
+  public localGeojsonStorage: any  = new Map();
+  public listOfStops: IPtStop[]    = [];
   public listOfRelations: object[] = [];
-  public listOfAreas: object[] = [];
-  public listOfMasters: object[] = [];
-  public listOfVariants: object[] = [];
+  public listOfAreas: object[]     = [];
+  public listOfMasters: object[]   = [];
+  public listOfVariants: object[]  = [];
 
   // filtering of sidebar
-  public listOfStopsForRoute: IPtStop[] = [];
+  public listOfStopsForRoute: IPtStop[]   = [];
   public listOfRelationsForStop: object[] = [];
 
-  public stopsForRoute: number[] = [];
+  public stopsForRoute: number[]     = [];
   public platformsForRoute: number[] = [];
-  public waysForRoute: number[] = [];
+  public waysForRoute: number[]      = [];
   public relationsForRoute: number[] = [];
 
   public idsHaveMaster = new Set();
@@ -36,22 +36,23 @@ export class StorageService {
   public selectedStopBeginnerMode: IOsmElement | undefined;
 
   public displayName: string = '';
-  public imgHref: string = '';
+  public imgHref: string     = '';
 
-  public edits: object[] = [];
+  public edits: object[]                     = [];
   public editsChanged: EventEmitter<boolean> = new EventEmitter();
-  public stats: EventEmitter<object> = new EventEmitter();
+  public stats: EventEmitter<object>         = new EventEmitter();
 
   public completelyDownloadedRoutesIDB    = new Set();
   public completelyDownloadedStopsIDB     = new Set();
   public completelyDownloadedPlatformsIDB = new Set();
   public queriedRoutesForMastersIDB       = new Set();
 
-  public nameErrorsObj: any[]                      = [];
-  public refErrorsObj: any[]                       = [];
-  public wayErrorsObj: any[]                       = [];
+  public nameErrorsObj: any[]      = [];
+  public refErrorsObj: any[]       = [];
+  public wayErrorsObj: any[]       = [];
+  public ptPairErrorsObject: any[] = [];
 
-  public currentIndex                            = 0;
+  public currentIndex                              = 0;
   public refreshErrorObjects: EventEmitter<object> = new EventEmitter();
 
   constructor() {

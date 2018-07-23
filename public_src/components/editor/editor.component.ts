@@ -6,10 +6,10 @@ import { MapService } from '../../services/map.service';
 import { StorageService } from '../../services/storage.service';
 
 import { ModalDirective } from 'ngx-bootstrap';
-import { select } from '@angular-redux/store';
+import { NgRedux, select } from '@angular-redux/store';
 import { Observable } from 'rxjs';
 import { AppActions } from '../../store/app/actions';
-
+import {IAppState} from '../../store/model';
 @Component({
   providers: [],
   selector: 'editor',
@@ -35,7 +35,7 @@ export class EditorComponent implements OnInit, AfterViewInit {
     private editSrv: EditService,
     private mapSrv: MapService,
     private storageSrv: StorageService,
-  ) {
+    private ngRedux: NgRedux<IAppState>) {
     //
   }
 
@@ -46,10 +46,14 @@ export class EditorComponent implements OnInit, AfterViewInit {
       this.totalEditSteps = data.total;
     });
     this.mapSrv.map.on('click', (event: MouseEvent) => {
-      if (this.editing && this.creatingElementOfType !== '') {
-        this.editSrv.createElement(this.creatingElementOfType, event);
-        this.creatingElementOfType = '';
-      }
+           if (this.editing && this.creatingElementOfType !== '') {
+             if (this.ngRedux.getState()['app']['editing'] && this.creatingElementOfType !== '') {
+               this.editSrv.createElement(this.creatingElementOfType, event);
+               this.editSrv.createElement(this.creatingElementOfType, event);
+               this.creatingElementOfType = '';
+               this.creatingElementOfType = '';
+             }
+           }
     });
   }
 
@@ -120,7 +124,7 @@ export class EditorComponent implements OnInit, AfterViewInit {
    * Provides access to editing service function.
    * @param type
    */
-  private createElement(type: string): void {
+  public createElement(type: string): void {
     this.creatingElementOfType = this.creatingElementOfType === type ? '' : type;
   }
 
@@ -147,6 +151,7 @@ export class EditorComponent implements OnInit, AfterViewInit {
    * Activates editing mode (locally/globally).
    */
   private toggleEditMode(): void {
+    this.appActions.actToggleEditing();
     this.editing = !this.editing;
     this.editSrv.editingMode.emit(this.editing);
     this.mapSrv.editingMode = this.editing;

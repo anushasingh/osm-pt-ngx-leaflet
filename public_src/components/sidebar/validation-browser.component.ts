@@ -15,7 +15,8 @@ import { ConfService } from '../../services/conf.service';
 
 import { IPtStop } from '../../core/ptStop.interface';
 import { ISuggestionsBrowserOptions } from '../../core/editingOptions.interface';
-import { INameErrorObject, IRefErrorObject, IWayErrorObject } from '../../core/errorObject.interface';
+import { INameErrorObject, IPTPairErrorObject, IRefErrorObject, IWayErrorObject } from '../../core/errorObject.interface';
+import {PtTags} from '../../core/ptTags.class';
 
 @Component({
   selector: 'validation-browser',
@@ -30,9 +31,11 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
   public refErrorsObj: IRefErrorObject[];
   public nameErrorsObj: INameErrorObject[];
   public wayErrorsObj: IWayErrorObject[];
+  public ptPairErrorsObj: IPTPairErrorObject[];
   @Input() suggestionsBrowserOptions: ISuggestionsBrowserOptions;
   public errorCorrectionModeSubscription;
   public errorCorrectionMode: ISuggestionsBrowserOptions;
+  public platformTags = PtTags.expectedKeys;
 
   constructor(
     private errorHighlightSrv: ErrorHighlightService,
@@ -57,6 +60,10 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
       if (typeOfErrorObject === 'way as parent') {
         this.wayErrorsObj = this.storageSrv.wayErrorsObj;
       }
+
+      if (typeOfErrorObject === 'pt-pair') {
+        this.ptPairErrorsObj = this.storageSrv.ptPairErrorsObject;
+      }
     });
 
     this.errorCorrectionModeSubscription = ngRedux.select<ISuggestionsBrowserOptions>(['app', 'errorCorrectionMode'])
@@ -72,9 +79,10 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
    * @returns {void}
    */
   public startValidation(): void {
-    this.nameErrorsObj = [];
-    this.refErrorsObj = [];
-    this.wayErrorsObj = [];
+    this.nameErrorsObj   = [];
+    this.refErrorsObj    = [];
+    this.wayErrorsObj    = [];
+    this.ptPairErrorsObj = [];
     if (this.mapSrv.map.getZoom() > ConfService.minDownloadZoomForErrors) {
       this.overpassSrv.requestNewOverpassData();
     } else {
@@ -90,12 +98,13 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
     if (this.errorCorrectionMode.nameSuggestions) {
       this.appActions.actSetErrorCorrectionMode(
         {
-          nameSuggestions: {
+          nameSuggestions  : {
             found          : true,
             startCorrection: true,
           },
-          refSuggestions : this.errorCorrectionMode.refSuggestions,
-          waySuggestions : this.errorCorrectionMode.waySuggestions,
+          refSuggestions   : this.errorCorrectionMode.refSuggestions,
+          waySuggestions   : this.errorCorrectionMode.waySuggestions,
+          ptPairSuggestions: this.errorCorrectionMode.ptPairSuggestions,
         });
     }
     this.errorHighlightSrv.missingTagError('name');
@@ -105,13 +114,15 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
     if (this.errorCorrectionMode.waySuggestions) {
       this.appActions.actSetErrorCorrectionMode(
         {
-          waySuggestions: {
+          waySuggestions   : {
             found          : true,
             startCorrection: true,
           },
-          refSuggestions : this.errorCorrectionMode.refSuggestions,
-          nameSuggestions : this.errorCorrectionMode.nameSuggestions,
-        }); }
+          refSuggestions   : this.errorCorrectionMode.refSuggestions,
+          nameSuggestions  : this.errorCorrectionMode.nameSuggestions,
+          ptPairSuggestions: this.errorCorrectionMode.ptPairSuggestions,
+        });
+    }
     this.errorHighlightSrv.missingTagError('way');
   }
 
@@ -123,15 +134,32 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
     if (this.errorCorrectionMode.refSuggestions) {
       this.appActions.actSetErrorCorrectionMode(
         {
-          nameSuggestions: this.errorCorrectionMode.nameSuggestions,
-          refSuggestions : {
+          nameSuggestions  : this.errorCorrectionMode.nameSuggestions,
+          refSuggestions   : {
             found          : true,
             startCorrection: true,
           },
-          waySuggestions: this.errorCorrectionMode.waySuggestions,
+          waySuggestions   : this.errorCorrectionMode.waySuggestions,
+          ptPairSuggestions: this.errorCorrectionMode.ptPairSuggestions,
         });
     }
     this.errorHighlightSrv.missingTagError('ref');
+  }
+
+  public startPTPairCorrection(): void {
+    if (this.errorCorrectionMode.ptPairSuggestions) {
+      this.appActions.actSetErrorCorrectionMode(
+        {
+          nameSuggestions  : this.errorCorrectionMode.nameSuggestions,
+          refSuggestions   : this.errorCorrectionMode.refSuggestions,
+          waySuggestions   : this.errorCorrectionMode.waySuggestions,
+          ptPairSuggestions: {
+            found          : true,
+            startCorrection: true,
+          },
+        });
+    }
+    this.errorHighlightSrv.missingTagError('pt-pair');
   }
   /**
    * Moves to the next location
@@ -171,6 +199,10 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
+  public jumpPTPairCorrection(index: any): any{
+    this.errorHighlightSrv.startPTPairCorrection(this.ptPairErrorsObj[index]);
+  }
+
   /***
    * Determines if given window should bw viewed
    * @param {string} name
@@ -189,6 +221,10 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
         return this.errorCorrectionMode &&
           this.errorCorrectionMode.waySuggestions &&
           this.errorCorrectionMode.waySuggestions.found;
+      case 'pt-pair-errors-menu-item':
+        return this.errorCorrectionMode &&
+          this.errorCorrectionMode.ptPairSuggestions &&
+          this.errorCorrectionMode.ptPairSuggestions.found;
       case 'name-error-list':
         return this.errorCorrectionMode &&
           this.errorCorrectionMode.nameSuggestions.startCorrection;
@@ -200,6 +236,10 @@ export class ValidationBrowserComponent implements OnInit, OnDestroy {
         return this.errorCorrectionMode &&
           this.errorCorrectionMode.waySuggestions &&
           this.errorCorrectionMode.waySuggestions.startCorrection;
+      case 'pt-pair-error-list':
+        return this.errorCorrectionMode &&
+          this.errorCorrectionMode.ptPairSuggestions &&
+          this.errorCorrectionMode.ptPairSuggestions.startCorrection;
       case 'menu':
         return this.errorCorrectionMode &&
           (this.errorCorrectionMode.refSuggestions ? (!this.errorCorrectionMode.refSuggestions.startCorrection) : true) &&

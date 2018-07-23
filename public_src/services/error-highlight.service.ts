@@ -16,26 +16,32 @@ import { BsModalRef, BsModalService } from 'ngx-bootstrap';
 
 import { ModalComponent } from '../components/modal/modal.component';
 
-import { INameErrorObject, IRefErrorObject, IWayErrorObject } from '../core/errorObject.interface';
+import { INameErrorObject, IPTPairErrorObject, IRefErrorObject, IWayErrorObject } from '../core/errorObject.interface';
 import { ISuggestionsBrowserOptions } from '../core/editingOptions.interface';
+import { IPtStop } from '../core/ptStop.interface';
+import { EditService } from './edit.service';
 
 @Injectable()
 export class ErrorHighlightService {
   modalRef: BsModalRef;
-  public nameErrorsObj: INameErrorObject[] = [];
-  public refErrorsObj: IRefErrorObject[]   = [];
-  public wayErrorsObj: IWayErrorObject[]   = [];
+  public nameErrorsObj: INameErrorObject[]     = [];
+  public refErrorsObj: IRefErrorObject[]       = [];
+  public wayErrorsObj: IWayErrorObject[]       = [];
+  public ptPairErrorsObj: IPTPairErrorObject[] = [];
 
   public currentIndex = 0;
   public currentMode: string;
 
+  public errorCorrectionMode: ISuggestionsBrowserOptions;
+  public errorCorrectionModeSubscription;
   constructor(
     private modalService: BsModalService,
-    private ngRedux: NgRedux<IAppState>,
     private processSrv: ProcessService,
     public appActions: AppActions,
     public mapSrv: MapService,
     public storageSrv: StorageService,
+    private editSrv: EditService,
+    private ngRedux: NgRedux<IAppState>,
   ) {
 
     this.storageSrv.refreshErrorObjects.subscribe((data) => {
@@ -50,7 +56,12 @@ export class ErrorHighlightService {
       if (typeOfErrorObject === 'way as parent') {
         this.wayErrorsObj = this.storageSrv.wayErrorsObj;
       }
+      if (typeOfErrorObject === 'pt-pair') {
+        this.ptPairErrorsObj = this.storageSrv.ptPairErrorsObject;
+      }
     });
+    this.errorCorrectionModeSubscription = ngRedux.select<ISuggestionsBrowserOptions>(['app', 'errorCorrectionMode'])
+      .subscribe((data) => this.errorCorrectionMode = data);
   }
 
   /***
@@ -88,8 +99,50 @@ export class ErrorHighlightService {
       stop = this.wayErrorsObj[0]['stop'];
       this.mapSrv.map.setView({ lat: stop.lat, lng: stop.lon }, 15);
     }
+
+    if (this.currentMode === 'pt-pair') {
+      this.startPTPairCorrection(this.ptPairErrorsObj[0]);
+      // this.addSinglePopUp(this.ptPairErrorsObj[0]);
+      stop = this.ptPairErrorsObj[0]['stop'];
+      this.mapSrv.map.setView({ lat: stop.lat, lng: stop.lon }, 15);
+    }
   }
 
+  public startPTPairCorrection(ptPairErrorObj: IPTPairErrorObject): any {
+    let circle;
+
+    if (ptPairErrorObj.corrected === 'false') {
+      circle = new L.Circle([ptPairErrorObj.stop.lat, ptPairErrorObj.stop.lon], {
+        radius: 100,
+        color: '#9838ff',
+        opacity: 0.75,
+      }).addTo(this.mapSrv.map);
+    }
+
+    let circleBounds = circle.getBounds();
+    let stopId = ptPairErrorObj.stop.id;
+    let stopLayer = null;
+    this.mapSrv.map.eachLayer((layer) => {
+      if (layer['feature'] && layer['_latlng']) {
+        let featureID = this.mapSrv.getFeatureIdFromMarker(layer['feature']);
+        if (featureID === stopId) {
+          stopLayer = layer;
+        }
+      }
+    });
+    stopLayer.bindPopup('Add a platform near me', { closeOnClick: false, closeButton : false }).openPopup();
+
+    this.mapSrv.map.on('click', (event) => {
+      if(ptPairErrorObj.corrected === 'false' && this.errorCorrectionMode.ptPairSuggestions && this.errorCorrectionMode.ptPairSuggestions.startCorrection){
+        if (circleBounds.contains(event['latlng']) && ptPairErrorObj.corrected === 'false') {
+          this.openModalWithComponentForPTPair(ptPairErrorObj, event, circle);
+        } else {
+          alert('not within bounds');
+        }
+      }
+
+    });
+  }
   /***
    * Generates the popup content
    * @returns {object}
@@ -142,6 +195,7 @@ export class ErrorHighlightService {
         if ((errorCorrectionMode.waySuggestions && errorCorrectionMode.waySuggestions.startCorrection)) {
           this.openModalWithComponentForWay(errorObj);
         }
+
         this.storageSrv.currentElementsChange.emit(
           JSON.parse(JSON.stringify(element)),
         );
@@ -226,7 +280,6 @@ export class ErrorHighlightService {
    * @param {IWayErrorObject} errorObject
    */
   public openModalWithComponentForWay(errorObject: IWayErrorObject): void {
-    console.log('error objjjjjjj', errorObject);
     if (errorObject.corrected === 'false') {
       let initialState;
       initialState = {
@@ -238,6 +291,22 @@ export class ErrorHighlightService {
     }
 
   }
+
+  public openModalWithComponentForPTPair(errorObject: IPTPairErrorObject, event: any, circleLayer: any): void {
+    if (errorObject.corrected === 'false') {
+      let initialState;
+      initialState = {
+        error      : 'pt-pair',
+        ptPairErrorObject : errorObject,
+        newPlatformEvent: event,
+        circleLayer,
+      };
+
+      this.modalRef = this.modalService.show(ModalComponent, { initialState });
+    }
+
+  }
+
   /***
    * Counts and forms name error objects
    */
@@ -329,6 +398,52 @@ export class ErrorHighlightService {
     this.storageSrv.refreshErrorObjects.emit({ typeOfErrorObject : 'way as parent' });
   }
 
+  public checkDistance(stop: IPtStop, platform: IPtStop): boolean {
+    let stopLayer = null;
+    let platformLayer = null;
+
+    this.mapSrv.map.eachLayer((layer) => {
+      if (layer['feature'] && layer['_latlng']) {
+        let featureID = this.mapSrv.getFeatureIdFromMarker(layer['feature']);
+        if (featureID === stop.id) {
+          stopLayer = layer;
+        }
+        if (featureID === platform.id) {
+          platformLayer = layer;
+        }
+      }
+    });
+
+    return (stopLayer.getLatLng().distanceTo(platformLayer.getLatLng()) < 100);
+  }
+
+  public countPTPairErrors(): void {
+    this.storageSrv.currentIndex       = 0;
+    this.ptPairErrorsObj               = [];
+    this.storageSrv.ptPairErrorsObject = [];
+
+    this.storageSrv.elementsMap.forEach((stop) => {
+      if (stop.type === 'node' && (stop.tags.public_transport &&
+        stop.tags.public_transport === 'stop_position' || (stop.tags.highway && stop.tags.highway === 'bus_stop')) &&
+        this.mapSrv.map.getBounds().contains(stop)) {
+        let flag = false;
+        this.storageSrv.elementsMap.forEach((platform) => {
+          if (platform.type === 'node' && (platform.tags.public_transport === 'platform') &&
+            (this.checkDistance(stop, platform))) {
+            flag = true;
+          }
+        });
+
+        if (!flag) {
+          let errorObj: IPTPairErrorObject = { stop, corrected: 'false' };
+          this.ptPairErrorsObj.push(errorObj);
+        }
+        this.storageSrv.ptPairErrorsObject = this.ptPairErrorsObj;
+        this.storageSrv.refreshErrorObjects.emit({ typeOfErrorObject: 'pt-pair' });
+      }
+    });
+  }
+
   /***
    * Checks whether on Mobile/Desktop
    * @returns {boolean}
@@ -365,6 +480,11 @@ export class ErrorHighlightService {
         errorsObj         = this.wayErrorsObj;
         typeOfErrorObject = 'missing way';
         appendStringID    = '-way-error-list-id';
+        break;
+      case 'pt-pair':
+        errorsObj         = this.ptPairErrorsObj;
+        typeOfErrorObject = 'pt-pair';
+        appendStringID    = '-pt-pair-error-list-id';
         break;
     }
     if (this.currentIndex === (errorsObj.length - 1)) {
@@ -419,6 +539,11 @@ export class ErrorHighlightService {
         typeOfErrorObject = 'missing way';
         appendStringID    = '-way-error-list-id';
         break;
+      case 'pt-pair':
+        errorsObj         = this.ptPairErrorsObj;
+        typeOfErrorObject = 'pt-pair';
+        appendStringID    = '-pt-pair-error-list-id';
+        break;
     }
 
     if (this.currentIndex === 0) {
@@ -455,29 +580,43 @@ export class ErrorHighlightService {
     if (errorCorrectionMode) {
       if (errorCorrectionMode.refSuggestions && errorCorrectionMode.refSuggestions.startCorrection) {
         this.appActions.actSetErrorCorrectionMode({
-          nameSuggestions: errorCorrectionMode.nameSuggestions,
-          refSuggestions : {
+          nameSuggestions  : errorCorrectionMode.nameSuggestions,
+          refSuggestions   : {
             found          : true,
             startCorrection: false,
           },
-          waySuggestions: errorCorrectionMode.waySuggestions,
+          waySuggestions   : errorCorrectionMode.waySuggestions,
+          ptPairSuggestions: errorCorrectionMode.ptPairSuggestions,
         });
       }
       if (errorCorrectionMode.nameSuggestions.startCorrection) {
         this.appActions.actSetErrorCorrectionMode({
-          nameSuggestions: {
+          nameSuggestions  : {
             found          : true,
             startCorrection: false,
           },
-          refSuggestions : errorCorrectionMode.refSuggestions,
-          waySuggestions : errorCorrectionMode.waySuggestions,
+          refSuggestions   : errorCorrectionMode.refSuggestions,
+          waySuggestions   : errorCorrectionMode.waySuggestions,
+          ptPairSuggestions: errorCorrectionMode.ptPairSuggestions,
         });
       }
       if (errorCorrectionMode.waySuggestions && errorCorrectionMode.waySuggestions.startCorrection) {
         this.appActions.actSetErrorCorrectionMode({
-          nameSuggestions: errorCorrectionMode.nameSuggestions,
-          refSuggestions : errorCorrectionMode.refSuggestions,
-          waySuggestions : {
+          nameSuggestions  : errorCorrectionMode.nameSuggestions,
+          refSuggestions   : errorCorrectionMode.refSuggestions,
+          waySuggestions   : {
+            found          : true,
+            startCorrection: false,
+          },
+          ptPairSuggestions: errorCorrectionMode.ptPairSuggestions,
+        });
+      }
+      if (errorCorrectionMode.ptPairSuggestions && errorCorrectionMode.ptPairSuggestions.startCorrection) {
+        this.appActions.actSetErrorCorrectionMode({
+          nameSuggestions  : errorCorrectionMode.nameSuggestions,
+          refSuggestions   : errorCorrectionMode.refSuggestions,
+          waySuggestions   : errorCorrectionMode.waySuggestions,
+          ptPairSuggestions: {
             found          : true,
             startCorrection: false,
           },
@@ -688,6 +827,20 @@ export class ErrorHighlightService {
       this.mapSrv.map.setView({ lat: stop.lat, lng: stop.lon }, 15);
       document.getElementById(this.wayErrorsObj[this.currentIndex]
         .stop.id.toString() + '-way-error-list-id')
+        .style.backgroundColor = 'lightblue';
+    }
+
+    if (errorCorrectionMode.waySuggestions && errorCorrectionMode.waySuggestions.startCorrection) {
+      document.getElementById(this.ptPairErrorsObj[this.currentIndex].stop.id.toString() + '-pt-pair-error-list-id')
+        .style.backgroundColor = 'white';
+      this.currentIndex = index;
+      this.storageSrv.currentIndex = index;
+      this.storageSrv.refreshErrorObjects.emit({ typeOfErrorObject : 'pt-pair' });
+      this.addSinglePopUp(this.ptPairErrorsObj[this.currentIndex]);
+      let stop = this.ptPairErrorsObj[this.currentIndex].stop;
+      this.mapSrv.map.setView({ lat: stop.lat, lng: stop.lon }, 15);
+      document.getElementById(this.ptPairErrorsObj[this.currentIndex]
+        .stop.id.toString() + '-pt-pair-error-list-id')
         .style.backgroundColor = 'lightblue';
     }
   }
