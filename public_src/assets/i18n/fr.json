@@ -35,6 +35,7 @@
   "Delete current changes": "Supprimer les modifications en cours",
   "Delete": "Effacer",
   "Disable current highlight": "Désactiver la surbrillance actuelle",
+  "Do you want add the tag public_transport = platform?": "Do you want add the tag public_transport = platform?" ,
   "Download data from Overpass API": "Télécharger les données de l'API Overpass",
   "Download data with current query and continue": "Télécharger les données avec la requête en cours et continuer",
   "Download parent (route_master) relations": "Télécharger les relations parent (route_master)",

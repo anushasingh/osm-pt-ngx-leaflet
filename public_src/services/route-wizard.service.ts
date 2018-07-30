@@ -52,7 +52,9 @@ export class RouteWizardService {
    * @returns {void}
    */
   public onShownModal(): void {
-    this.map.invalidateSize();
+    if (this.map) {
+      this.map.invalidateSize();
+    }
   }
 
   /***

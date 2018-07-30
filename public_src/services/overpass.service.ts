@@ -137,6 +137,7 @@ export class OverpassService {
           if (errorCorrectionMode) {
             if (errorCorrectionMode.refSuggestions === null && errorCorrectionMode.waySuggestions === null) {
               this.errorHighlightSrv.countNameErrors();
+              this.errorHighlightSrv.countPTvErrors();
               this.appActions.actSetErrorCorrectionMode({
                 nameSuggestions: {
                   found          : true,
@@ -144,11 +145,38 @@ export class OverpassService {
                 },
                 refSuggestions : null,
                 waySuggestions : null,
+                PTvSuggestions : {
+                  found          : true,
+                  startCorrection: false,
+                },
               });
             } else {
               if (this.errorHighlightSrv.isMobileDevice()) {
+                this.errorHighlightSrv.countNameErrors();
+                this.errorHighlightSrv.countRefErrors();
+                this.errorHighlightSrv.countPTvErrors();
+                this.appActions.actSetErrorCorrectionMode({
+                  nameSuggestions: {
+                    found          : true,
+                    startCorrection: false,
+                  },
+                  refSuggestions : {
+                    found          : true,
+                    startCorrection: false,
+                  },
+                  waySuggestions : null,
+                  PTvSuggestions : {
+                    found          : true,
+                    startCorrection: false,
+                  },
+                });
+              } else {
+                let toDownload = this.errorHighlightSrv.getNotDownloadedStopsInBounds();
+                if (toDownload.length === 0) {
                   this.errorHighlightSrv.countNameErrors();
                   this.errorHighlightSrv.countRefErrors();
+                  this.errorHighlightSrv.countWayErrors();
+                  this.errorHighlightSrv.countPTvErrors();
                   this.appActions.actSetErrorCorrectionMode({
                     nameSuggestions: {
                       found          : true,
@@ -158,30 +186,17 @@ export class OverpassService {
                       found          : true,
                       startCorrection: false,
                     },
-                    waySuggestions : null,
+                    waySuggestions : {
+                      found          : true,
+                      startCorrection: false,
+                    },
+                    PTvSuggestions : {
+                      found          : true,
+                      startCorrection: false,
+                    },
                   });
-              } else {
-                let toDownload = this.errorHighlightSrv.getNotDownloadedStopsInBounds();
-                if (toDownload.length === 0) {
-                    this.errorHighlightSrv.countNameErrors();
-                    this.errorHighlightSrv.countRefErrors();
-                    this.errorHighlightSrv.countWayErrors();
-                    this.appActions.actSetErrorCorrectionMode({
-                      nameSuggestions: {
-                        found          : true,
-                        startCorrection: false,
-                      },
-                      refSuggestions : {
-                        found          : true,
-                        startCorrection: false,
-                      },
-                      waySuggestions : {
-                        found          : true,
-                        startCorrection: false,
-                      },
-                    });
                 } else {
-                    this.downloadMultipleNodeData(toDownload);
+                  this.downloadMultipleNodeData(toDownload);
                 }
               }
             }
@@ -867,10 +882,15 @@ export class OverpassService {
               found          : true,
               startCorrection: false,
             },
+            PTvSuggestions : {
+              found          : true,
+              startCorrection: false,
+            },
           });
           this.errorHighlightSrv.countNameErrors();
           this.errorHighlightSrv.countRefErrors();
           this.errorHighlightSrv.countWayErrors();
+          this.errorHighlightSrv.countPTvErrors();
         },
         (err) => {
           this.warnSrv.showError();
